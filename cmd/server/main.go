@@ -3,23 +3,25 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"github.com/Swaraj-Singh-30/SlingShare/internal/signaling"
 )
 
 func main() {
 	mux := http.NewServeMux()
 
-	//Health check (cause why not)
-
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request){
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("SlingShare server is running"))
 	})
 
-	// Serve frontend
+	signalingServer := signaling.NewServer()
+	mux.HandleFunc("/ws", signalingServer.HandleWebSocket)
+
 	mux.Handle("/", http.FileServer(http.Dir("./web")))
 
 	server := &http.Server{
-		Addr: ":8080",
+		Addr:    ":8080",
 		Handler: mux,
 	}
 
