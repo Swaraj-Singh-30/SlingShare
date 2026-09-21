@@ -1,5 +1,6 @@
 Slingshare
 
+```
 Go
 ├── HTTP server
 ├── WebSocket signaling
@@ -32,5 +33,6 @@ slingshare/
 │
 ├── go.mod
 └── README.md
+```
 
 yada yada yada
