@@ -1,12 +1,12 @@
-# Initial project structure:
- 
+Slingshare
+
 Go
 ├── HTTP server
-├── WebSocket signalling
+├── WebSocket signaling
 ├── Session management
 └── Static content / SEO pages
 
-Browser
+UI thingy
 ├── HTML
 ├── CSS
 ├── Vanilla JavaScript
@@ -14,18 +14,23 @@ Browser
 ├── Web Crypto API
 └── QR generation/scanning
 
-:
-dropivia/
+Project Directory Structure
+slingshare/
 ├── cmd/
 │   └── server/
 │       └── main.go
+│
 ├── internal/
 │   ├── signaling/
 │   ├── session/
 │   └── peer/
+│
 ├── web/
 │   ├── index.html
 │   ├── app.js
 │   └── style.css
+│
 ├── go.mod
 └── README.md
+
+yada yada yada
