@@ -6,6 +6,7 @@ import (
 
 	"github.com/Swaraj-Singh-30/SlingShare/internal/peer"
 	"github.com/Swaraj-Singh-30/SlingShare/internal/session"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -33,21 +34,30 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	// Temporary IDs for testing.
-	peerID := r.URL.Query().Get("peer")
-	sessionID := r.URL.Query().Get("session")
+	log.Println("WebSocket client connected")
 
-	if peerID == "" || sessionID == "" {
-		log.Println("Missing peer or session ID")
+	// Wait for the client's join message.
+	var msg Message
+
+	if err := conn.ReadJSON(&msg); err != nil {
+		log.Println("Failed to read join message:", err)
 		return
 	}
 
-	p := peer.New(peerID, conn)
+	if msg.Type != "join" || msg.SessionID == "" {
+		log.Println("Invalid join message")
+		return
+	}
+
+	sessionID := msg.SessionID
+	peerID := uuid.NewString()
 
 	// Create the session if it doesn't exist.
 	if _, exists := s.sessions.Get(sessionID); !exists {
 		s.sessions.Create(sessionID)
 	}
+
+	p := peer.New(peerID, conn)
 
 	if !s.sessions.AddPeer(sessionID, p) {
 		log.Println("Failed to add peer")
@@ -56,27 +66,52 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Peer %s joined session %s", peerID, sessionID)
 
-	defer s.sessions.RemovePeer(sessionID, peerID)
+	// Tell the new peer its assigned ID.
+	s.sendMessage(p, Message{
+		Type:      "joined",
+		SessionID: sessionID,
+		PeerID:    peerID,
+	})
+
+	// Tell existing peers that a new peer joined.
+	s.broadcast(sessionID, peerID, Message{
+		Type:   "peer-joined",
+		PeerID: peerID,
+	})
+
+	defer func() {
+		s.sessions.RemovePeer(sessionID, peerID)
+
+		s.broadcast(sessionID, peerID, Message{
+			Type:   "peer-left",
+			PeerID: peerID,
+		})
+
+		log.Printf("Peer %s left session %s", peerID, sessionID)
+	}()
 
 	for {
-		messageType, message, err := conn.ReadMessage()
-		if err != nil {
+		var msg Message
+
+		if err := conn.ReadJSON(&msg); err != nil {
 			log.Printf("Peer %s disconnected", peerID)
 			return
 		}
 
-		log.Printf("Received from %s: %s", peerID, message)
+		log.Printf("Received from %s: %+v", peerID, msg)
 
-		s.broadcast(sessionID, peerID, messageType, message)
+		// For now, relay normal messages to other peers.
+		if msg.Type == "message" {
+			s.broadcast(sessionID, peerID, Message{
+				Type:   "message",
+				PeerID: peerID,
+				Data:   msg.Data,
+			})
+		}
 	}
 }
 
-func (s *Server) broadcast(
-	sessionID string,
-	senderID string,
-	messageType int,
-	message []byte,
-) {
+func (s *Server) broadcast(sessionID, senderID string, msg Message) {
 	currentSession, exists := s.sessions.Get(sessionID)
 	if !exists {
 		return
@@ -87,14 +122,19 @@ func (s *Server) broadcast(
 			continue
 		}
 
-		p.WriteLock.Lock()
-
-		err := p.Conn.WriteMessage(messageType, message)
-
-		p.WriteLock.Unlock()
-
-		if err != nil {
-			log.Printf("Failed to send message to %s: %v", peerID, err)
-		}
+		s.sendMessage(p, msg)
 	}
+}
+
+func (s *Server) sendMessage(p *peer.Peer, msg Message) {
+	p.WriteLock.Lock()
+	defer p.WriteLock.Unlock()
+
+	if err := p.Conn.WriteJSON(msg); err != nil {
+		log.Printf("Failed to send message to peer %s: %v", p.ID, err)
+	}
+}
+
+func generatePeerID() string {
+	return uuid.NewString()
 }

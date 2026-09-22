@@ -2,16 +2,48 @@ const messageInput = document.getElementById("messageInput");
 const sendButton = document.getElementById("sendButton");
 const messages = document.getElementById("messages");
 
+const sessionId = "ABC123";
+
 const socket = new WebSocket(
-    `ws://${window.location.host}/ws?peer=A&session=ABC123`
+    `ws://${window.location.host}/ws`
 );
+
+let peerId = null;
 
 socket.addEventListener("open", () => {
     addMessage("Connected to SlingShare server");
+
+    socket.send(JSON.stringify({
+        type: "join",
+        sessionId: sessionId
+    }));
 });
 
 socket.addEventListener("message", (event) => {
-    addMessage(`Server: ${event.data}`);
+    const message = JSON.parse(event.data);
+
+    switch (message.type) {
+        case "joined":
+            peerId = message.peerId;
+            addMessage(`Joined session: ${message.sessionId}`);
+            addMessage(`Your peer ID: ${peerId}`);
+            break;
+
+        case "peer-joined":
+            addMessage(`Peer joined: ${message.peerId}`);
+            break;
+
+        case "peer-left":
+            addMessage(`Peer left: ${message.peerId}`);
+            break;
+
+        case "message":
+            addMessage(`Peer ${message.peerId}: ${message.data}`);
+            break;
+
+        default:
+            console.log("Unknown message:", message);
+    }
 });
 
 socket.addEventListener("close", () => {
@@ -30,7 +62,11 @@ sendButton.addEventListener("click", () => {
         return;
     }
 
-    socket.send(message);
+    socket.send(JSON.stringify({
+        type: "message",
+        data: message
+    }));
+
     addMessage(`You: ${message}`);
 
     messageInput.value = "";
