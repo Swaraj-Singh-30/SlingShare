@@ -34,29 +34,25 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	log.Println("WebSocket client connected")
+	var join Message
 
-	// Wait for the client's join message.
-	var msg Message
-
-	if err := conn.ReadJSON(&msg); err != nil {
+	if err := conn.ReadJSON(&join); err != nil {
 		log.Println("Failed to read join message:", err)
 		return
 	}
 
-	if msg.Type != "join" || msg.SessionID == "" {
+	if join.Type != "join" || join.SessionID == "" {
 		log.Println("Invalid join message")
 		return
 	}
 
-	sessionID := msg.SessionID
-	peerID := uuid.NewString()
+	sessionID := join.SessionID
 
-	// Create the session if it doesn't exist.
 	if _, exists := s.sessions.Get(sessionID); !exists {
 		s.sessions.Create(sessionID)
 	}
 
+	peerID := uuid.NewString()
 	p := peer.New(peerID, conn)
 
 	if !s.sessions.AddPeer(sessionID, p) {
@@ -66,14 +62,12 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Peer %s joined session %s", peerID, sessionID)
 
-	// Tell the new peer its assigned ID.
 	s.sendMessage(p, Message{
 		Type:      "joined",
 		SessionID: sessionID,
 		PeerID:    peerID,
 	})
 
-	// Tell existing peers that a new peer joined.
 	s.broadcast(sessionID, peerID, Message{
 		Type:   "peer-joined",
 		PeerID: peerID,
@@ -98,20 +92,57 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Printf("Received from %s: %+v", peerID, msg)
+		switch msg.Type {
+		case "offer", "answer", "ice-candidate":
+			s.routeSignalingMessage(sessionID, peerID, msg)
 
-		// For now, relay normal messages to other peers.
-		if msg.Type == "message" {
+		case "message":
 			s.broadcast(sessionID, peerID, Message{
 				Type:   "message",
 				PeerID: peerID,
 				Data:   msg.Data,
 			})
+
+		default:
+			log.Printf("Unknown message type from %s: %s", peerID, msg.Type)
 		}
 	}
 }
 
-func (s *Server) broadcast(sessionID, senderID string, msg Message) {
+func (s *Server) routeSignalingMessage(
+	sessionID string,
+	senderID string,
+	msg Message,
+) {
+	if msg.TargetID == "" {
+		return
+	}
+
+	currentSession, exists := s.sessions.Get(sessionID)
+	if !exists {
+		return
+	}
+
+	target, exists := currentSession.Peers[msg.TargetID]
+	if !exists {
+		log.Printf(
+			"Target peer %s not found in session %s",
+			msg.TargetID,
+			sessionID,
+		)
+		return
+	}
+
+	msg.PeerID = senderID
+
+	s.sendMessage(target, msg)
+}
+
+func (s *Server) broadcast(
+	sessionID string,
+	senderID string,
+	msg Message,
+) {
 	currentSession, exists := s.sessions.Get(sessionID)
 	if !exists {
 		return
@@ -131,10 +162,10 @@ func (s *Server) sendMessage(p *peer.Peer, msg Message) {
 	defer p.WriteLock.Unlock()
 
 	if err := p.Conn.WriteJSON(msg); err != nil {
-		log.Printf("Failed to send message to peer %s: %v", p.ID, err)
+		log.Printf(
+			"Failed to send message to peer %s: %v",
+			p.ID,
+			err,
+		)
 	}
-}
-
-func generatePeerID() string {
-	return uuid.NewString()
 }
