@@ -2,7 +2,9 @@ const messageInput = document.getElementById("messageInput");
 const sendButton = document.getElementById("sendButton");
 const messages = document.getElementById("messages");
 
-const socket = new WebSocket(`ws://${window.location.host}/ws`);
+const socket = new WebSocket(
+    `ws://${window.location.host}/ws?peer=A&session=ABC123`
+);
 
 socket.addEventListener("open", () => {
     addMessage("Connected to SlingShare server");
