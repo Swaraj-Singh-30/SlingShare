@@ -5,16 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SlingShare</title>
 </head>
+
 <body>
     <h1>SlingShare</h1>
 
-    <input id="messageInput" type="text" placeholder="Enter a message">
-    <button id="sendButton">Send</button>
+    <input
+        id="messageInput"
+        type="text"
+        placeholder="Enter a message"
+    >
 
-    <div>
-        <h2>Messages</h2>
-        <pre id="messages"></pre>
-    </div>
+    <button id="sendButton">
+        Send
+    </button>
+
+    <h2>Messages</h2>
+    <pre id="messages"></pre>
+
+    <hr>
+
+    <h2>File Transfer</h2>
+
+    <input
+        id="fileInput"
+        type="file"
+    >
+
+    <button id="sendFileButton">
+        Send File
+    </button>
+
+    <div id="fileStatus"></div>
+
+    <progress
+        id="fileProgress"
+        value="0"
+        max="100"
+    ></progress>
+
+    <div id="downloads"></div>
 
     <script src="/app.js"></script>
 </body>
