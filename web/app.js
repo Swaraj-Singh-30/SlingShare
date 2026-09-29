@@ -49,10 +49,18 @@ const sessionIdElement =
 const copyRoomButton =
     document.getElementById("copyRoomButton");
 
+const createRoomButton =
+    document.getElementById("createRoomButton");
 
-const SESSION_ID = "ABC123";
+const joinRoomButton =
+    document.getElementById("joinRoomButton");
+
+const roomInput =
+    document.getElementById("roomInput");
+
 
 const CHUNK_SIZE = 16 * 1024;
+
 
 const socket = new WebSocket(
     `ws://${window.location.host}/ws`
@@ -62,12 +70,49 @@ const socket = new WebSocket(
 let peerId = null;
 let remotePeerId = null;
 
+let sessionId = null;
+
 let peerConnection = null;
 let dataChannel = null;
 
 let incomingFile = null;
 
 let selectedFiles = [];
+
+
+// ========================================
+// Session
+// ========================================
+
+function createSession() {
+
+    if (socket.readyState !== WebSocket.OPEN) {
+        addMessage("Server connection is not ready");
+        return;
+    }
+
+    socket.send(
+        JSON.stringify({
+            type: "create-session"
+        })
+    );
+}
+
+
+function joinSession(roomCode) {
+
+    if (socket.readyState !== WebSocket.OPEN) {
+        addMessage("Server connection is not ready");
+        return;
+    }
+
+    socket.send(
+        JSON.stringify({
+            type: "join-session",
+            sessionId: roomCode
+        })
+    );
+}
 
 
 // ========================================
@@ -79,11 +124,8 @@ socket.addEventListener("open", () => {
     connectionStatus.textContent =
         "Connected";
 
-    socket.send(
-        JSON.stringify({
-            type: "join",
-            sessionId: SESSION_ID
-        })
+    addMessage(
+        "Connected to SlingShare server"
     );
 });
 
@@ -92,21 +134,65 @@ socket.addEventListener(
     "message",
     async (event) => {
 
-        const message =
-            JSON.parse(event.data);
+        let message;
+
+        try {
+            message =
+                JSON.parse(event.data);
+        } catch (error) {
+            console.error(
+                "Invalid server message:",
+                error
+            );
+            return;
+        }
+
 
         switch (message.type) {
 
-            case "joined":
+            case "session-created":
+
+                sessionId =
+                    message.sessionId;
 
                 peerId =
                     message.peerId;
 
                 sessionIdElement.textContent =
-                    message.sessionId;
+                    sessionId;
+
+                copyRoomButton.disabled =
+                    false;
+
+                peerStatus.textContent =
+                    "Waiting for peer";
 
                 addMessage(
-                    "Connected to SlingShare"
+                    `Room created: ${sessionId}`
+                );
+
+                break;
+
+
+            case "session-joined":
+
+                sessionId =
+                    message.sessionId;
+
+                peerId =
+                    message.peerId;
+
+                sessionIdElement.textContent =
+                    sessionId;
+
+                copyRoomButton.disabled =
+                    false;
+
+                peerStatus.textContent =
+                    "Connecting...";
+
+                addMessage(
+                    `Joined room: ${sessionId}`
                 );
 
                 break;
@@ -124,14 +210,20 @@ socket.addEventListener(
                     "Peer joined the room"
                 );
 
+
                 if (!peerConnection) {
-                    await createPeerConnection(true);
+
+                    await createPeerConnection(
+                        true
+                    );
                 }
 
                 break;
 
 
             case "peer-left":
+
+                remotePeerId = null;
 
                 peerStatus.textContent =
                     "Waiting for peer";
@@ -150,7 +242,10 @@ socket.addEventListener(
                 remotePeerId =
                     message.peerId;
 
-                await createPeerConnection(false);
+                await createPeerConnection(
+                    false
+                );
+
 
                 await peerConnection.setRemoteDescription(
                     new RTCSessionDescription(
@@ -158,12 +253,15 @@ socket.addEventListener(
                     )
                 );
 
+
                 const answer =
                     await peerConnection.createAnswer();
+
 
                 await peerConnection.setLocalDescription(
                     answer
                 );
+
 
                 sendSignal(
                     "answer",
@@ -215,6 +313,26 @@ socket.addEventListener(
                 break;
 
 
+            case "error": {
+
+                let errorMessage =
+                    message.data;
+
+                try {
+                    errorMessage =
+                        JSON.parse(message.data);
+                } catch {
+                    // Already a normal string.
+                }
+
+                addMessage(
+                    `Error: ${errorMessage}`
+                );
+
+                break;
+            }
+
+
             default:
 
                 console.log(
@@ -236,6 +354,120 @@ socket.addEventListener(
 );
 
 
+socket.addEventListener(
+    "error",
+    (error) => {
+
+        console.error(
+            "WebSocket error:",
+            error
+        );
+
+        connectionStatus.textContent =
+            "Connection error";
+    }
+);
+
+
+// ========================================
+// Create / Join Room
+// ========================================
+
+createRoomButton.addEventListener(
+    "click",
+    () => {
+
+        if (sessionId) {
+
+            addMessage(
+                "You are already in a room"
+            );
+
+            return;
+        }
+
+        createSession();
+    }
+);
+
+
+joinRoomButton.addEventListener(
+    "click",
+    () => {
+
+        const roomCode =
+            roomInput.value
+                .trim()
+                .toUpperCase();
+
+
+        if (!roomCode) {
+
+            addMessage(
+                "Enter a room code"
+            );
+
+            roomInput.focus();
+
+            return;
+        }
+
+
+        if (roomCode.length !== 6) {
+
+            addMessage(
+                "Room code must be 6 characters"
+            );
+
+            roomInput.focus();
+
+            return;
+        }
+
+
+        if (sessionId) {
+
+            addMessage(
+                "You are already in a room"
+            );
+
+            return;
+        }
+
+
+        joinSession(roomCode);
+    }
+);
+
+
+roomInput.addEventListener(
+    "input",
+    () => {
+
+        roomInput.value =
+            roomInput.value
+                .toUpperCase()
+                .replace(
+                    /[^A-Z0-9]/g,
+                    ""
+                )
+                .slice(0, 6);
+    }
+);
+
+
+roomInput.addEventListener(
+    "keydown",
+    (event) => {
+
+        if (event.key === "Enter") {
+
+            joinRoomButton.click();
+        }
+    }
+);
+
+
 // ========================================
 // WebRTC
 // ========================================
@@ -246,6 +478,7 @@ async function createPeerConnection(
 
     peerConnection =
         new RTCPeerConnection({
+
             iceServers: [
                 {
                     urls:
@@ -266,6 +499,7 @@ async function createPeerConnection(
                 return;
             }
 
+
             sendSignal(
                 "ice-candidate",
                 remotePeerId,
@@ -282,6 +516,7 @@ async function createPeerConnection(
             const state =
                 peerConnection.connectionState;
 
+
             if (state === "connected") {
 
                 peerStatus.textContent =
@@ -291,6 +526,7 @@ async function createPeerConnection(
                     "Direct P2P connection established"
                 );
             }
+
 
             if (
                 state === "failed" ||
@@ -322,6 +558,7 @@ async function createPeerConnection(
                 "slingshare"
             );
 
+
         setupDataChannel(
             dataChannel
         );
@@ -351,7 +588,8 @@ async function createPeerConnection(
 
 function setupDataChannel(channel) {
 
-    dataChannel = channel;
+    dataChannel =
+        channel;
 
     dataChannel.binaryType =
         "arraybuffer";
@@ -389,7 +627,7 @@ function setupDataChannel(channel) {
 
 
 // ========================================
-// Incoming DataChannel messages
+// DataChannel messages
 // ========================================
 
 function handleDataChannelMessage(
@@ -401,14 +639,25 @@ function handleDataChannelMessage(
         "string"
     ) {
 
-        const message =
-            JSON.parse(event.data);
+        let message;
+
+        try {
+
+            message =
+                JSON.parse(event.data);
+
+        } catch (error) {
+
+            console.error(
+                "Invalid P2P message:",
+                error
+            );
+
+            return;
+        }
 
 
-        if (
-            message.type ===
-            "text"
-        ) {
+        if (message.type === "text") {
 
             addMessage(
                 `Peer: ${message.data}`
@@ -469,7 +718,7 @@ function handleDataChannelMessage(
 
 
 // ========================================
-// Text messages
+// Text
 // ========================================
 
 sendButton.addEventListener(
@@ -483,6 +732,7 @@ messageInput.addEventListener(
     (event) => {
 
         if (event.key === "Enter") {
+
             sendTextMessage();
         }
     }
@@ -537,6 +787,7 @@ function sendTextMessage() {
 browseButton.addEventListener(
     "click",
     () => {
+
         fileInput.click();
     }
 );
@@ -547,7 +798,9 @@ fileInput.addEventListener(
     () => {
 
         addSelectedFiles(
-            Array.from(fileInput.files)
+            Array.from(
+                fileInput.files
+            )
         );
 
         fileInput.value = "";
@@ -557,7 +810,9 @@ fileInput.addEventListener(
 
 function addSelectedFiles(files) {
 
-    selectedFiles.push(...files);
+    selectedFiles.push(
+        ...files
+    );
 
     renderSelectedFiles();
 }
@@ -565,7 +820,9 @@ function addSelectedFiles(files) {
 
 function renderSelectedFiles() {
 
-    selectedFilesContainer.innerHTML = "";
+    selectedFilesContainer.innerHTML =
+        "";
+
 
     selectedCount.textContent =
         `${selectedFiles.length} ${
@@ -662,9 +919,6 @@ function renderSelectedFiles() {
             remove.textContent =
                 "×";
 
-            remove.title =
-                "Remove file";
-
 
             remove.addEventListener(
                 "click",
@@ -694,7 +948,7 @@ function renderSelectedFiles() {
 
 
 // ========================================
-// Clear selected files
+// Clear
 // ========================================
 
 clearFilesButton.addEventListener(
@@ -709,14 +963,14 @@ clearFilesButton.addEventListener(
 
 
 // ========================================
-// Send selected files
+// Send files
 // ========================================
 
 sendFilesButton.addEventListener(
     "click",
     async () => {
 
-        if (selectedFiles.length === 0) {
+        if (!selectedFiles.length) {
             return;
         }
 
@@ -734,7 +988,7 @@ sendFilesButton.addEventListener(
         }
 
 
-        const filesToSend =
+        const files =
             [...selectedFiles];
 
 
@@ -743,17 +997,13 @@ sendFilesButton.addEventListener(
         renderSelectedFiles();
 
 
-        for (const file of filesToSend) {
+        for (const file of files) {
 
             await sendFile(file);
         }
     }
 );
 
-
-// ========================================
-// Send file
-// ========================================
 
 async function sendFile(file) {
 
@@ -838,7 +1088,7 @@ async function sendFile(file) {
 
 
 // ========================================
-// DataChannel backpressure
+// Backpressure
 // ========================================
 
 function waitForBuffer() {
@@ -942,29 +1192,38 @@ function receiveFileChunk(chunk) {
 }
 
 
-// ========================================
-// Finish incoming file
-// ========================================
-
 function finishIncomingFile() {
+
     if (!incomingFile) {
         return;
     }
 
-    const fileName = incomingFile.name;
-    const mimeType = incomingFile.mimeType;
 
-    const blob = new Blob(
-        incomingFile.chunks,
-        {
-            type: mimeType
-        }
-    );
+    const fileName =
+        incomingFile.name;
 
-    const url = URL.createObjectURL(blob);
+    const mimeType =
+        incomingFile.mimeType;
+
+
+    const blob =
+        new Blob(
+            incomingFile.chunks,
+            {
+                type: mimeType
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(blob);
+
 
     const downloadButton =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
+
 
     downloadButton.className =
         "download-button";
@@ -972,32 +1231,51 @@ function finishIncomingFile() {
     downloadButton.textContent =
         "Download";
 
+
     downloadButton.addEventListener(
         "click",
         () => {
+
             const link =
-                document.createElement("a");
+                document.createElement(
+                    "a"
+                );
 
-            link.href = url;
-            link.download = fileName;
 
-            document.body.appendChild(link);
+            link.href =
+                url;
+
+            link.download =
+                fileName;
+
+
+            document.body.appendChild(
+                link
+            );
 
             link.click();
 
             link.remove();
 
-            // Free the Blob URL after the browser
-            // has had time to start the download.
-            setTimeout(() => {
-                URL.revokeObjectURL(url);
-            }, 1000);
+
+            setTimeout(
+                () => {
+
+                    URL.revokeObjectURL(
+                        url
+                    );
+
+                },
+                1000
+            );
         }
     );
+
 
     incomingFile.transfer.card.appendChild(
         downloadButton
     );
+
 
     updateTransferCard(
         incomingFile.transfer,
@@ -1005,12 +1283,13 @@ function finishIncomingFile() {
         "Received"
     );
 
+
     incomingFile = null;
 }
 
 
 // ========================================
-// Transfer card
+// Transfer UI
 // ========================================
 
 function createTransferCard(
@@ -1087,16 +1366,27 @@ function createTransferCard(
         "progress";
 
     progress.max = 100;
+
     progress.value = 0;
 
 
-    info.appendChild(top);
-    info.appendChild(progress);
+    info.appendChild(
+        top
+    );
+
+    info.appendChild(
+        progress
+    );
 
 
-    card.appendChild(info);
+    card.appendChild(
+        info
+    );
 
-    transfers.prepend(card);
+
+    transfers.prepend(
+        card
+    );
 
 
     return {
@@ -1116,13 +1406,14 @@ function updateTransferCard(
     transfer.progress.value =
         progress;
 
+
     transfer.status.textContent =
         `${status} · ${Math.round(progress)}%`;
 }
 
 
 // ========================================
-// Drag and drop
+// Drag & drop
 // ========================================
 
 dropZone.addEventListener(
@@ -1160,13 +1451,11 @@ dropZone.addEventListener(
         );
 
 
-        const files =
+        addSelectedFiles(
             Array.from(
                 event.dataTransfer.files
-            );
-
-
-        addSelectedFiles(files);
+            )
+        );
     }
 );
 
@@ -1179,26 +1468,49 @@ copyRoomButton.addEventListener(
     "click",
     async () => {
 
-        await navigator.clipboard.writeText(
-            SESSION_ID
-        );
+        if (!sessionId) {
+            return;
+        }
 
-        copyRoomButton.textContent =
-            "Copied";
 
-        setTimeout(
-            () => {
-                copyRoomButton.textContent =
-                    "Copy";
-            },
-            1200
-        );
+        try {
+
+            await navigator.clipboard.writeText(
+                sessionId
+            );
+
+
+            copyRoomButton.textContent =
+                "Copied";
+
+
+            setTimeout(
+                () => {
+
+                    copyRoomButton.textContent =
+                        "Copy";
+
+                },
+                1200
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Failed to copy room code:",
+                error
+            );
+
+            addMessage(
+                `Room code: ${sessionId}`
+            );
+        }
     }
 );
 
 
 // ========================================
-// Signalling
+// Signaling
 // ========================================
 
 function sendSignal(
@@ -1207,10 +1519,19 @@ function sendSignal(
     data
 ) {
 
+    if (
+        socket.readyState !==
+        WebSocket.OPEN
+    ) {
+        return;
+    }
+
+
     socket.send(
         JSON.stringify({
             type,
             targetId,
+            peerId,
             data
         })
     );
@@ -1239,8 +1560,7 @@ function closePeerConnection() {
     }
 
 
-    remotePeerId =
-        null;
+    remotePeerId = null;
 }
 
 
@@ -1252,6 +1572,7 @@ function addMessage(message) {
 
     messages.textContent +=
         `${message}\n`;
+
 
     messages.scrollTop =
         messages.scrollHeight;
@@ -1303,32 +1624,50 @@ function getFileIcon(filename) {
 
 
     if (
-        ["jpg", "jpeg", "png", "gif", "webp"]
-            .includes(extension)
+        [
+            "jpg",
+            "jpeg",
+            "png",
+            "gif",
+            "webp"
+        ].includes(extension)
     ) {
         return "IMG";
     }
 
 
     if (
-        ["mp4", "mov", "avi", "mkv"]
-            .includes(extension)
+        [
+            "mp4",
+            "mov",
+            "avi",
+            "mkv"
+        ].includes(extension)
     ) {
         return "VID";
     }
 
 
     if (
-        ["mp3", "wav", "ogg", "flac"]
-            .includes(extension)
+        [
+            "mp3",
+            "wav",
+            "ogg",
+            "flac"
+        ].includes(extension)
     ) {
         return "AUD";
     }
 
 
     if (
-        ["zip", "rar", "7z", "tar", "gz"]
-            .includes(extension)
+        [
+            "zip",
+            "rar",
+            "7z",
+            "tar",
+            "gz"
+        ].includes(extension)
     ) {
         return "ZIP";
     }

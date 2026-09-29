@@ -1,18 +1,25 @@
 package signaling
 
 import (
+	"crypto/rand"
+	"encoding/json"
 	"log"
 	"net/http"
+	"sync"
 
-	"github.com/Swaraj-Singh-30/SlingShare/internal/peer"
-	"github.com/Swaraj-Singh-30/SlingShare/internal/session"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+)
+
+const (
+	roomCodeLength = 6
+	maxPeers       = 2
 )
 
 type Server struct {
 	upgrader websocket.Upgrader
-	sessions *session.Manager
+
+	mu       sync.RWMutex
+	sessions map[string]map[*websocket.Conn]string
 }
 
 func NewServer() *Server {
@@ -22,7 +29,7 @@ func NewServer() *Server {
 				return true
 			},
 		},
-		sessions: session.NewManager(),
+		sessions: make(map[string]map[*websocket.Conn]string),
 	}
 }
 
@@ -32,140 +39,289 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Println("WebSocket upgrade failed:", err)
 		return
 	}
+
 	defer conn.Close()
 
-	var join Message
+	log.Println("WebSocket client connected")
 
-	if err := conn.ReadJSON(&join); err != nil {
-		log.Println("Failed to read join message:", err)
-		return
-	}
-
-	if join.Type != "join" || join.SessionID == "" {
-		log.Println("Invalid join message")
-		return
-	}
-
-	sessionID := join.SessionID
-
-	if _, exists := s.sessions.Get(sessionID); !exists {
-		s.sessions.Create(sessionID)
-	}
-
-	peerID := uuid.NewString()
-	p := peer.New(peerID, conn)
-
-	if !s.sessions.AddPeer(sessionID, p) {
-		log.Println("Failed to add peer")
-		return
-	}
-
-	log.Printf("Peer %s joined session %s", peerID, sessionID)
-
-	s.sendMessage(p, Message{
-		Type:      "joined",
-		SessionID: sessionID,
-		PeerID:    peerID,
-	})
-
-	s.broadcast(sessionID, peerID, Message{
-		Type:   "peer-joined",
-		PeerID: peerID,
-	})
-
-	defer func() {
-		s.sessions.RemovePeer(sessionID, peerID)
-
-		s.broadcast(sessionID, peerID, Message{
-			Type:   "peer-left",
-			PeerID: peerID,
-		})
-
-		log.Printf("Peer %s left session %s", peerID, sessionID)
-	}()
+	var sessionID string
+	var peerID string
 
 	for {
-		var msg Message
+		_, rawMessage, err := conn.ReadMessage()
+		if err != nil {
+			if sessionID != "" {
+				s.removePeer(sessionID, peerID, conn)
+			}
 
-		if err := conn.ReadJSON(&msg); err != nil {
-			log.Printf("Peer %s disconnected", peerID)
+			log.Println("WebSocket connection closed:", err)
 			return
 		}
 
-		switch msg.Type {
-		case "offer", "answer", "ice-candidate":
-			s.routeSignalingMessage(sessionID, peerID, msg)
+		var msg Message
 
-		case "message":
-			s.broadcast(sessionID, peerID, Message{
-				Type:   "message",
-				PeerID: peerID,
-				Data:   msg.Data,
-			})
-
-		default:
-			log.Printf("Unknown message type from %s: %s", peerID, msg.Type)
-		}
-	}
-}
-
-func (s *Server) routeSignalingMessage(
-	sessionID string,
-	senderID string,
-	msg Message,
-) {
-	if msg.TargetID == "" {
-		return
-	}
-
-	currentSession, exists := s.sessions.Get(sessionID)
-	if !exists {
-		return
-	}
-
-	target, exists := currentSession.Peers[msg.TargetID]
-	if !exists {
-		log.Printf(
-			"Target peer %s not found in session %s",
-			msg.TargetID,
-			sessionID,
-		)
-		return
-	}
-
-	msg.PeerID = senderID
-
-	s.sendMessage(target, msg)
-}
-
-func (s *Server) broadcast(
-	sessionID string,
-	senderID string,
-	msg Message,
-) {
-	currentSession, exists := s.sessions.Get(sessionID)
-	if !exists {
-		return
-	}
-
-	for peerID, p := range currentSession.Peers {
-		if peerID == senderID {
+		if err := json.Unmarshal(rawMessage, &msg); err != nil {
+			log.Println("Invalid message:", err)
 			continue
 		}
 
-		s.sendMessage(p, msg)
+		switch msg.Type {
+
+		case "create-session":
+			if sessionID != "" {
+				continue
+			}
+
+			sessionID = s.generateRoomCode()
+			peerID = s.generatePeerID()
+
+			s.mu.Lock()
+
+			s.sessions[sessionID] = map[*websocket.Conn]string{
+				conn: peerID,
+			}
+
+			s.mu.Unlock()
+
+			s.sendMessage(conn, Message{
+				Type:      "session-created",
+				SessionID: sessionID,
+				PeerID:    peerID,
+			})
+
+			log.Printf(
+				"Peer %s created session %s",
+				peerID,
+				sessionID,
+			)
+
+		case "join-session":
+			if sessionID != "" {
+				continue
+			}
+
+			if msg.SessionID == "" {
+				s.sendError(conn, "Session code is required")
+				continue
+			}
+
+			s.mu.Lock()
+
+			peers, exists := s.sessions[msg.SessionID]
+
+			if !exists {
+				s.mu.Unlock()
+				s.sendError(conn, "Session not found")
+				continue
+			}
+
+			if len(peers) >= maxPeers {
+				s.mu.Unlock()
+				s.sendError(conn, "Session is full")
+				continue
+			}
+
+			sessionID = msg.SessionID
+			peerID = s.generatePeerID()
+
+			peers[conn] = peerID
+
+			s.mu.Unlock()
+
+			s.sendMessage(conn, Message{
+				Type:      "session-joined",
+				SessionID: sessionID,
+				PeerID:    peerID,
+			})
+
+			log.Printf(
+				"Peer %s joined session %s",
+				peerID,
+				sessionID,
+			)
+
+			s.notifyPeerJoined(sessionID, conn, peerID)
+
+		case "offer", "answer", "ice-candidate":
+			if sessionID == "" {
+				continue
+			}
+
+			s.forwardToPeer(
+				sessionID,
+				msg.TargetID,
+				rawMessage,
+			)
+		}
 	}
 }
 
-func (s *Server) sendMessage(p *peer.Peer, msg Message) {
-	p.WriteLock.Lock()
-	defer p.WriteLock.Unlock()
+func (s *Server) removePeer(
+	sessionID string,
+	peerID string,
+	conn *websocket.Conn,
+) {
+	s.mu.Lock()
 
-	if err := p.Conn.WriteJSON(msg); err != nil {
-		log.Printf(
-			"Failed to send message to peer %s: %v",
-			p.ID,
-			err,
-		)
+	peers, exists := s.sessions[sessionID]
+
+	if !exists {
+		s.mu.Unlock()
+		return
 	}
+
+	delete(peers, conn)
+
+	remainingPeers := make([]*websocket.Conn, 0)
+
+	for peerConn := range peers {
+		remainingPeers = append(remainingPeers, peerConn)
+	}
+
+	if len(peers) == 0 {
+		delete(s.sessions, sessionID)
+	}
+
+	s.mu.Unlock()
+
+	for _, peerConn := range remainingPeers {
+		s.sendMessage(peerConn, Message{
+			Type:   "peer-left",
+			PeerID: peerID,
+		})
+	}
+
+	log.Printf(
+		"Peer %s left session %s",
+		peerID,
+		sessionID,
+	)
+}
+
+func (s *Server) notifyPeerJoined(
+	sessionID string,
+	newConn *websocket.Conn,
+	newPeerID string,
+) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	peers := s.sessions[sessionID]
+
+	for conn := range peers {
+		if conn == newConn {
+			continue
+		}
+
+		s.sendMessage(conn, Message{
+			Type:   "peer-joined",
+			PeerID: newPeerID,
+		})
+	}
+}
+
+func (s *Server) forwardToPeer(
+	sessionID string,
+	targetID string,
+	rawMessage []byte,
+) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	peers := s.sessions[sessionID]
+
+	for conn, peerID := range peers {
+		if peerID != targetID {
+			continue
+		}
+
+		err := conn.WriteMessage(
+			websocket.TextMessage,
+			rawMessage,
+		)
+
+		if err != nil {
+			log.Println("Failed to forward message:", err)
+		}
+
+		return
+	}
+}
+
+func (s *Server) sendMessage(
+	conn *websocket.Conn,
+	message Message,
+) {
+	data, err := json.Marshal(message)
+
+	if err != nil {
+		log.Println("Failed to marshal message:", err)
+		return
+	}
+
+	err = conn.WriteMessage(
+		websocket.TextMessage,
+		data,
+	)
+
+	if err != nil {
+		log.Println("WebSocket write failed:", err)
+	}
+}
+
+func (s *Server) sendError(
+	conn *websocket.Conn,
+	message string,
+) {
+	data, err := json.Marshal(message)
+
+	if err != nil {
+		log.Println("Failed to marshal error:", err)
+		return
+	}
+
+	s.sendMessage(conn, Message{
+		Type: "error",
+		Data: data,
+	})
+}
+
+func (s *Server) generateRoomCode() string {
+	const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+	randomBytes := make([]byte, roomCodeLength)
+
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	result := make([]byte, roomCodeLength)
+
+	for i := 0; i < roomCodeLength; i++ {
+		index := int(randomBytes[i]) % len(characters)
+		result[i] = characters[index]
+	}
+
+	return string(result)
+}
+
+func (s *Server) generatePeerID() string {
+	const characters = "abcdefghijklmnopqrstuvwxyz0123456789"
+
+	randomBytes := make([]byte, 8)
+
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	result := make([]byte, 8)
+
+	for i := 0; i < 8; i++ {
+		index := int(randomBytes[i]) % len(characters)
+		result[i] = characters[index]
+	}
+
+	return string(result)
 }

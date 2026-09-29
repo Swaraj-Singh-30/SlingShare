@@ -32,33 +32,87 @@
 
     <main>
 
-        <!-- Session -->
+       <!-- Session -->
 
-        <section class="session">
+<section class="session">
 
-            <div>
-                <span class="eyebrow">ROOM</span>
+    <div class="session-actions">
 
-                <div class="room">
-                    <span id="sessionId">ABC123</span>
+        <div>
+            <span class="eyebrow">ROOM</span>
 
-                    <button
-                        id="copyRoomButton"
-                        class="icon-button"
-                        title="Copy room code"
-                    >
-                        Copy
-                    </button>
-                </div>
+            <div class="room">
+
+                <span id="sessionId">
+                    No room
+                </span>
+
+                <button
+                    id="copyRoomButton"
+                    class="icon-button"
+                    title="Copy room code"
+                    type="button"
+                    disabled
+                >
+                    Copy
+                </button>
+
             </div>
+        </div>
 
-            <div class="peer-info">
-                <span class="eyebrow">STATUS</span>
-                <strong id="peerStatus">Waiting for peer</strong>
-            </div>
+        <button
+            id="createRoomButton"
+            class="primary-button"
+            type="button"
+        >
+            Create room
+        </button>
 
-        </section>
+    </div>
 
+
+    <div class="join-room">
+
+        <span class="eyebrow">
+            JOIN ROOM
+        </span>
+
+        <div class="join-controls">
+
+            <input
+                id="roomInput"
+                type="text"
+                maxlength="6"
+                placeholder="Enter room code"
+                autocomplete="off"
+            >
+
+            <button
+                id="joinRoomButton"
+                class="primary-button"
+                type="button"
+            >
+                Join
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="peer-info">
+
+        <span class="eyebrow">
+            STATUS
+        </span>
+
+        <strong id="peerStatus">
+            Create or join a room
+        </strong>
+
+    </div>
+
+</section>
 
         <!-- Sharing -->
 
