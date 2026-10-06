@@ -1,0 +1,98 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getArticleSchema, getBreadcrumbSchema } from '../config/site';
+
+const title = "Peer-to-Peer File Sharing — What It Is & How SlingShare Works";
+const description = "An in-depth explanation of browser-based peer-to-peer (P2P) file sharing, WebRTC DataChannels, SCTP transport, and cryptographic checksum validation.";
+const path = "/p2p-file-sharing";
+
+const structuredData = [
+  getArticleSchema(title, description, path),
+  getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Technology", path: "/docs" },
+    { name: "P2P File Sharing", path: path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} canonical={path} ogType="article" structuredData={structuredData}>
+  <div class="article-page">
+    <div class="container article-container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumbs">
+        <a href="/">Home</a> / <a href="/docs">Technology</a> / <span>P2P File Sharing</span>
+      </nav>
+
+      <header class="article-header">
+        <div class="badge badge-coral">Technical Overview</div>
+        <h1>Peer-to-Peer File Sharing in the Browser</h1>
+        <p class="lead">
+          Understanding how modern web applications establish direct socket channels between devices without requiring specialized desktop software or plugins.
+        </p>
+      </header>
+
+      <div class="article-body">
+        <h2>What Is Peer-to-Peer (P2P)?</h2>
+        <p>
+          Peer-to-peer computing is a distributed application architecture that partitions tasks or workloads between peers. Peers are equally privileged, equipotent participants in the application.
+        </p>
+        <p>
+          In client-server architectures, all traffic flows from clients to a central server. In P2P architectures, clients communicate directly with one another. Historically, P2P required dedicated software (like BitTorrent or Napster). Today, modern browsers support P2P out of the box through the W3C WebRTC specification.
+        </p>
+
+        <h2>The Anatomy of a SlingShare P2P Transfer</h2>
+        <div class="protocol-box card">
+          <div class="protocol-step">
+            <strong>1. Signaling Exchange (Go Server)</strong>
+            <p>Browsers connect to the SlingShare signaling server via WebSocket to exchange Session Description Protocol (SDP) offers and ICE candidates.</p>
+          </div>
+          <div class="protocol-divider">↓</div>
+          <div class="protocol-step">
+            <strong>2. NAT Traversal & Candidate Pairing</strong>
+            <p>Using STUN (Session Traversal Utilities for NAT), each browser discovers its public/local IP and port bindings. They establish a direct socket route across local LAN or router NATs.</p>
+          </div>
+          <div class="protocol-divider">↓</div>
+          <div class="protocol-step">
+            <strong>3. Encrypted SCTP DataChannel</strong>
+            <p>Once paired, a bidirectional RTCDataChannel is opened. Traffic is encrypted using Datagram Transport Layer Security (DTLS).</p>
+          </div>
+          <div class="protocol-divider">↓</div>
+          <div class="protocol-step">
+            <strong>4. Streaming Chunks & Backpressure</strong>
+            <p>The sender reads slices of the file and feeds them into the data channel while monitoring <code>bufferedAmount</code> to avoid memory bloat.</p>
+          </div>
+        </div>
+
+        <h2>Integrity Verification: Why SHA-256 Matters</h2>
+        <p>
+          Even though SCTP provides reliable in-order packet delivery, network interruptions or browser buffer truncation can theoretically cause incomplete files.
+        </p>
+        <p>
+          To ensure 100% data integrity, SlingShare computes a SHA-256 hash using the native Web Crypto API (<code>crypto.subtle.digest</code>) before sending. The receiving peer computes the hash on the reassembled byte array. If a single bit differs, the file is rejected with an integrity warning.
+        </p>
+
+        <div class="article-cta card-dark">
+          <h3>Experience modern P2P file sharing</h3>
+          <p style="color: var(--color-on-dark-soft); margin: 8px 0 20px;">Open two tabs or two devices to see it in action.</p>
+          <a href="/app" class="btn btn-primary">Launch SlingShare</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .article-page { padding: var(--spacing-xxl) 0; }
+  .article-container { max-width: 780px; }
+  .breadcrumb-nav { font-size: 0.85rem; color: var(--color-muted); margin-bottom: var(--spacing-lg); }
+  .article-header { margin-bottom: var(--spacing-xl); }
+  .article-header h1 { margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .article-body h2 { margin: var(--spacing-xl) 0 var(--spacing-sm); }
+  .article-body p { margin-bottom: var(--spacing-md); line-height: 1.65; }
+  .protocol-box { padding: var(--spacing-xl); margin: var(--spacing-lg) 0; background-color: var(--color-surface-soft); }
+  .protocol-step { padding: var(--spacing-xs) 0; }
+  .protocol-step strong { display: block; margin-bottom: 4px; color: var(--color-ink); }
+  .protocol-step p { margin: 0; font-size: 0.925rem; }
+  .protocol-divider { text-align: center; color: var(--color-primary); font-weight: bold; margin: 8px 0; }
+  .article-cta { margin-top: var(--spacing-xxl); padding: var(--spacing-xl); text-align: center; }
+</style>

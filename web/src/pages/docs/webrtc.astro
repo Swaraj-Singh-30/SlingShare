@@ -1,0 +1,86 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getArticleSchema, getBreadcrumbSchema } from '../../config/site';
+
+const title = "WebRTC, STUN, TURN & NAT Traversal Explained — SlingShare Docs";
+const description = "Understand how WebRTC traverses firewalls using STUN servers, when TURN relay fallback is necessary, and how SlingShare configures ICE servers.";
+const path = "/docs/webrtc";
+
+const structuredData = [
+  getArticleSchema(title, description, path),
+  getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Documentation", path: "/docs" },
+    { name: "WebRTC & NAT Traversal", path: path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} canonical={path} ogType="article" structuredData={structuredData}>
+  <div class="article-page">
+    <div class="container article-container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumbs">
+        <a href="/">Home</a> / <a href="/docs">Docs</a> / <span>WebRTC & NAT Traversal</span>
+      </nav>
+
+      <header class="article-header">
+        <div class="badge badge-coral">Networking Deep Dive</div>
+        <h1>WebRTC, STUN, TURN & NAT Traversal</h1>
+        <p class="lead">
+          How WebRTC overcomes router firewalls to establish direct socket tunnels between devices on different networks.
+        </p>
+      </header>
+
+      <div class="article-body">
+        <h2>The Challenge: Network Address Translation (NAT)</h2>
+        <p>
+          Almost all home and office routers assign private IP addresses (such as <code>192.168.1.X</code> or <code>10.0.0.X</code>) to connected devices. Outside devices on the public internet cannot initiate connections directly to a private IP without router port translation.
+        </p>
+
+        <h2>Interactive Connectivity Establishment (ICE)</h2>
+        <p>
+          WebRTC uses ICE (RFC 5245) to discover every possible path between two browsers. It gathers three classes of ICE candidates:
+        </p>
+        <ul>
+          <li><strong>Host Candidates:</strong> The local IP address on the device's network adapter. If both devices are on the same Wi-Fi network, host-to-host pairing is chosen for maximum LAN throughput.</li>
+          <li><strong>Server Reflexive Candidates (STUN):</strong> Discovered by querying a lightweight STUN server (such as Google's public STUN servers), which reflects back the device's public IP address and NAT port mapping.</li>
+          <li><strong>Relay Candidates (TURN):</strong> When both peers are trapped behind strict symmetric NAT firewalls (such as cellular carrier networks or restrictive corporate proxies), a Traversal Using Relays around NAT (TURN) server can relay encrypted packets.</li>
+        </ul>
+
+        <h2>Configuring Custom STUN/TURN Servers in SlingShare</h2>
+        <p>
+          In self-hosted and production environments, you can configure custom STUN/TURN servers using standard environment variables on the Go server:
+        </p>
+        <div class="code-box card-dark">
+          <pre><code># STUN servers (comma-separated)
+STUN_SERVERS="stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302"
+
+# Optional coturn TURN server for corporate relay fallback
+TURN_SERVER="turn:turn.yourdomain.com:3478?transport=udp"
+TURN_USERNAME="slingshare_user"
+TURN_CREDENTIAL="your_secure_password"</code></pre>
+        </div>
+
+        <div class="article-cta card-dark">
+          <h3>Ready to test your connection?</h3>
+          <p style="color: var(--color-on-dark-soft); margin: 8px 0 20px;">Open SlingShare to check whether your devices connect via Direct P2P.</p>
+          <a href="/app" class="btn btn-primary">Launch SlingShare</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .article-page { padding: var(--spacing-xxl) 0; }
+  .article-container { max-width: 820px; }
+  .breadcrumb-nav { font-size: 0.85rem; color: var(--color-muted); margin-bottom: var(--spacing-lg); }
+  .article-header { margin-bottom: var(--spacing-xl); }
+  .article-header h1 { margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .article-body h2 { margin: var(--spacing-xl) 0 var(--spacing-sm); }
+  .article-body p { margin-bottom: var(--spacing-md); line-height: 1.65; }
+  .article-body ul { margin-bottom: var(--spacing-md); padding-left: 20px; line-height: 1.65; }
+  .code-box { overflow-x: auto; padding: var(--spacing-lg); margin: var(--spacing-lg) 0; border-radius: var(--radius-md); }
+  .code-box pre { margin: 0; line-height: 1.5; color: #a8d5a2; font-size: 0.85rem; }
+  .article-cta { margin-top: var(--spacing-xxl); padding: var(--spacing-xl); text-align: center; }
+</style>

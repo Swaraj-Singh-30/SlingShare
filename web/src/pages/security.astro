@@ -1,0 +1,107 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getArticleSchema, getBreadcrumbSchema } from '../config/site';
+
+const title = "Security Architecture & Cryptographic Guarantees — SlingShare";
+const description = "Comprehensive breakdown of the SlingShare security model: DTLS-SRTP end-to-end encryption, ephemeral room isolation, and zero server storage.";
+const path = "/security";
+
+const structuredData = [
+  getArticleSchema(title, description, path),
+  getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Security", path: path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} canonical={path} ogType="article" structuredData={structuredData}>
+  <div class="article-page">
+    <div class="container article-container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumbs">
+        <a href="/">Home</a> / <span>Security Model</span>
+      </nav>
+
+      <header class="article-header">
+        <div class="badge badge-coral">Security Whitepaper</div>
+        <h1>SlingShare Security Architecture</h1>
+        <p class="lead">
+          We treat privacy and security as non-negotiable fundamentals. Here is how SlingShare protects your data from eavesdropping, interception, and unauthorized access.
+        </p>
+      </header>
+
+      <div class="article-body">
+        <h2>1. Zero Server-Side File Storage</h2>
+        <p>
+          The SlingShare Go signaling server is physically incapable of storing files. It operates solely as a temporary WebSocket rendezvous hub for exchanging session metadata (SDP offers and ICE candidates).
+        </p>
+        <p>
+          The WebSocket message parser implements a strict <strong>64 KB maximum message size</strong> limit. Any attempted transmission of binary files through the signaling server is automatically rejected by the server pipeline.
+        </p>
+
+        <h2>2. End-to-End Encryption (DTLS-SRTP)</h2>
+        <p>
+          All peer-to-peer data channels created by WebRTC are automatically encrypted using Datagram Transport Layer Security (DTLS).
+        </p>
+        <ul>
+          <li><strong>Cryptographic Ciphers:</strong> Modern AES-GCM and ChaCha20-Poly1305 ciphers negotiated directly by browser engines.</li>
+          <li><strong>Forward Secrecy:</strong> Ephemeral Diffie-Hellman key exchange ensures that past communications cannot be decrypted even if an encryption key were compromised in the future.</li>
+          <li><strong>Immunity to Man-in-the-Middle:</strong> The signaling server only handles the initial SDP fingerprints, which are authenticated during the DTLS handshake.</li>
+        </ul>
+
+        <h2>3. Ephemeral Sessions & Unpredictable Identifiers</h2>
+        <p>
+          Room codes are generated using cryptographically secure random number generators (<code>crypto/rand</code> in Go) drawn from an alphabet that avoids visual ambiguity (omitting 0, O, 1, and I).
+        </p>
+        <p>
+          Sessions are automatically garbage-collected and permanently purged when all peers disconnect or after reaching idle timeouts.
+        </p>
+
+        <h2>4. Cryptographic Integrity Verification (SHA-256)</h2>
+        <p>
+          Before any file is dispatched, the sending client computes a SHA-256 digest using the native W3C Web Crypto API. Upon receiving the final chunk, the receiving browser independently hashes the assembled bytes and validates the checksum before granting download access.
+        </p>
+
+        <div class="security-matrix card">
+          <h3>Summary Security Matrix</h3>
+          <div class="matrix-item">
+            <strong>Where are files stored?</strong>
+            <span>Only in the volatile memory of the sender and receiver devices. Never on the server.</span>
+          </div>
+          <div class="matrix-item">
+            <strong>Can the server operator inspect transferred files?</strong>
+            <span>No. Payloads are encrypted via DTLS before leaving the sender's browser.</span>
+          </div>
+          <div class="matrix-item">
+            <strong>Are accounts or credentials stored?</strong>
+            <span>No user accounts exist. Sessions are fully ephemeral.</span>
+          </div>
+        </div>
+
+        <div class="article-cta card-dark">
+          <h3>Experience privacy-first file transfer</h3>
+          <p style="color: var(--color-on-dark-soft); margin: 8px 0 20px;">No account required. Protected by end-to-end encryption.</p>
+          <a href="/app" class="btn btn-primary">Launch SlingShare</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .article-page { padding: var(--spacing-xxl) 0; }
+  .article-container { max-width: 780px; }
+  .breadcrumb-nav { font-size: 0.85rem; color: var(--color-muted); margin-bottom: var(--spacing-lg); }
+  .article-header { margin-bottom: var(--spacing-xl); }
+  .article-header h1 { margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .article-body h2 { margin: var(--spacing-xl) 0 var(--spacing-sm); }
+  .article-body p { margin-bottom: var(--spacing-md); line-height: 1.65; }
+  .article-body ul { margin-bottom: var(--spacing-md); padding-left: 20px; line-height: 1.65; }
+  .security-matrix { padding: var(--spacing-xl); background-color: var(--color-surface-soft); margin: var(--spacing-xl) 0; }
+  .security-matrix h3 { margin-bottom: var(--spacing-md); }
+  .matrix-item { border-bottom: 1px solid var(--color-hairline); padding: var(--spacing-sm) 0; }
+  .matrix-item:last-child { border-bottom: none; }
+  .matrix-item strong { display: block; color: var(--color-ink); margin-bottom: 2px; }
+  .matrix-item span { font-size: 0.925rem; color: var(--color-body); }
+  .article-cta { margin-top: var(--spacing-xxl); padding: var(--spacing-xl); text-align: center; }
+</style>

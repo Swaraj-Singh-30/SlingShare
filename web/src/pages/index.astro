@@ -1,11 +1,550 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import { getOrganizationSchema, getSoftwareApplicationSchema } from '../config/site';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const structuredData = [getOrganizationSchema(), getSoftwareApplicationSchema()];
 ---
 
-<Layout>
-	<Welcome />
+<Layout
+  title="SlingShare — Fast, Private File Sharing Between Devices"
+  description="Transfer files and text directly between your phone, laptop, and PC without accounts or cloud storage. End-to-end encrypted peer-to-peer sharing over WebRTC."
+  structuredData={structuredData}
+>
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container hero-container">
+      <div class="hero-content">
+        <div class="badge badge-coral hero-badge">
+          <span class="badge-dot"></span> Peer-to-Peer & Zero Server Storage
+        </div>
+        <h1 class="hero-title">
+          Open it. Connect your device. Drop something. Done.
+        </h1>
+        <p class="hero-subtitle lead">
+          SlingShare lets you send files, text snippets, and links directly between your phone, laptop, and PC in your web browser. No accounts, no upload waiting, and no files ever stored on any server.
+        </p>
+
+        <div class="hero-actions">
+          <a href="/app" class="btn btn-primary btn-lg">
+            Launch SlingShare App
+          </a>
+          <a href="/docs/how-it-works" class="btn btn-secondary btn-lg">
+            How It Works
+          </a>
+        </div>
+
+        <div class="hero-guarantees">
+          <div class="guarantee-item">
+            <span class="check-icon">✓</span> No sign-up or accounts
+          </div>
+          <div class="guarantee-item">
+            <span class="check-icon">✓</span> Direct P2P WebRTC data streams
+          </div>
+          <div class="guarantee-item">
+            <span class="check-icon">✓</span> End-to-end DTLS encryption
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-graphic">
+        <div class="hero-card card">
+          <div class="hero-logo-wrapper">
+            <img src="/logo.png" alt="SlingShare Artwork" class="hero-logo-img" width="180" height="180" />
+          </div>
+          <div class="pairing-demo-preview">
+            <div class="demo-chip">
+              <span class="demo-icon">💻</span>
+              <div class="demo-label">MacBook Pro</div>
+            </div>
+            <div class="demo-beam">
+              <span class="beam-arrow">⇄</span>
+              <span class="beam-text">Direct WebRTC</span>
+            </div>
+            <div class="demo-chip">
+              <span class="demo-icon">📱</span>
+              <div class="demo-label">iPhone 15</div>
+            </div>
+          </div>
+          <div class="demo-transfer-status">
+            <div class="demo-file-info">
+              <span>project-archive.zip</span>
+              <strong>142 MB/s</strong>
+            </div>
+            <div class="demo-progress-bar">
+              <div class="demo-progress-fill"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem / Contrast Section -->
+  <section class="contrast-section">
+    <div class="container">
+      <div class="section-heading-centered">
+        <h2>Why Cloud File Sharing Is Broken for Nearby Devices</h2>
+        <p class="lead">
+          Sending a file to the computer sitting right next to you shouldn't require uploading it to a data center across the world first.
+        </p>
+      </div>
+
+      <div class="contrast-grid">
+        <div class="card contrast-card old-way">
+          <div class="card-badge-pill">The Cloud Storage Way</div>
+          <h3>Upload, wait, send link, download, delete</h3>
+          <ul class="contrast-list">
+            <li>Requires creating an account and logging in</li>
+            <li>Files are uploaded to remote corporate servers</li>
+            <li>Limited by upload bandwidth and cloud quota</li>
+            <li>Privacy risks: files persist indefinitely until deleted</li>
+            <li>Cumbersome links, ads, and expiration timers</li>
+          </ul>
+        </div>
+
+        <div class="card contrast-card new-way">
+          <div class="badge badge-coral">The SlingShare Way</div>
+          <h3>Direct, private, zero-footprint transfers</h3>
+          <ul class="contrast-list">
+            <li>Zero accounts, no registration, no tracking</li>
+            <li>Files travel directly between devices via WebRTC</li>
+            <li>Local network speeds — up to hundreds of megabytes/sec</li>
+            <li>Zero server storage — nothing is ever saved in the cloud</li>
+            <li>Instant pairing with 6-character room codes or QR scan</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Pillars -->
+  <section class="pillars-section">
+    <div class="container">
+      <div class="section-heading-centered">
+        <h2>Engineered for Privacy & Performance</h2>
+        <p class="lead">Built on modern web standards to provide AirDrop-like simplicity across any operating system.</p>
+      </div>
+
+      <div class="pillars-grid">
+        <div class="pillar-card card">
+          <div class="pillar-icon">🔒</div>
+          <h3>End-to-End Encryption</h3>
+          <p>
+            All file chunks and text payloads travel through WebRTC DataChannels secured with DTLS (Datagram Transport Layer Security). Even the signaling server cannot see the payload.
+          </p>
+          <a href="/security" class="pillar-link">Read security architecture →</a>
+        </div>
+
+        <div class="pillar-card card">
+          <div class="pillar-icon">⚡</div>
+          <h3>Chunked Streaming & Backpressure</h3>
+          <p>
+            Files of any size are streamed in 64 KB slices with adaptive backpressure management to prevent memory bloat and keep your browser responsive.
+          </p>
+          <a href="/docs/file-transfer" class="pillar-link">Learn about chunking →</a>
+        </div>
+
+        <div class="pillar-card card">
+          <div class="pillar-icon">🛡️</div>
+          <h3>Cryptographic Verification</h3>
+          <p>
+            Every transfer includes client-side SHA-256 checksum calculation. The receiving device independently validates file integrity before completing the transfer.
+          </p>
+          <a href="/p2p-file-sharing" class="pillar-link">How P2P verification works →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Guides & Use Cases Navigation Grid -->
+  <section class="guides-section">
+    <div class="container">
+      <div class="section-header-flex">
+        <div>
+          <h2>Cross-Platform Guides</h2>
+          <p>Practical instructions for sharing across different ecosystems.</p>
+        </div>
+        <a href="/docs" class="btn btn-secondary">Explore All Docs</a>
+      </div>
+
+      <div class="guides-grid">
+        <a href="/how-to-send-files-between-phone-and-pc" class="guide-tile card">
+          <h4>Phone to PC Transfer</h4>
+          <p>How to quickly send photos, videos, and documents from Android or iPhone to a Windows PC without cables.</p>
+          <span class="guide-arrow">Read guide →</span>
+        </a>
+
+        <a href="/how-to-transfer-files-from-iphone-to-windows" class="guide-tile card">
+          <h4>iPhone to Windows</h4>
+          <p>The easiest wireless way to move high-res media from iOS to Windows without iTunes or iCloud.</p>
+          <span class="guide-arrow">Read guide →</span>
+        </a>
+
+        <a href="/how-to-transfer-files-from-android-to-mac" class="guide-tile card">
+          <h4>Android to Mac</h4>
+          <p>No buggy USB file transfer utilities required. Stream straight from your phone's browser to Safari or Chrome.</p>
+          <span class="guide-arrow">Read guide →</span>
+        </a>
+
+        <a href="/airdrop-alternative" class="guide-tile card">
+          <h4>Cross-Platform AirDrop Alternative</h4>
+          <p>Why SlingShare works seamlessly across Windows, Linux, Android, iOS, and macOS.</p>
+          <span class="guide-arrow">Read guide →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-card card-dark">
+        <h2>Start Sharing Files Directly</h2>
+        <p class="lead" style="color: var(--color-on-dark-soft); margin: 16px 0 32px; max-width: 600px;">
+          No installation required. Open SlingShare in your browser on two devices to connect and transfer in seconds.
+        </p>
+        <a href="/app" class="btn btn-primary btn-lg">Launch SlingShare</a>
+      </div>
+    </div>
+  </section>
 </Layout>
+
+<style>
+  .hero-section {
+    padding: var(--spacing-section) 0 var(--spacing-xxl);
+  }
+
+  .hero-container {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: var(--spacing-xxl);
+    align-items: center;
+  }
+
+  .hero-badge {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .hero-title {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .hero-subtitle {
+    margin-bottom: var(--spacing-xl);
+    max-width: 580px;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+  }
+
+  .hero-guarantees {
+    display: flex;
+    gap: var(--spacing-lg);
+    font-size: 0.875rem;
+    color: var(--color-muted);
+    flex-wrap: wrap;
+  }
+
+  .check-icon {
+    color: var(--color-success);
+    font-weight: bold;
+    margin-right: 4px;
+  }
+
+  .hero-graphic {
+    display: flex;
+    justify-content: center;
+  }
+
+  .hero-card {
+    width: 100%;
+    max-width: 440px;
+    padding: var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--color-surface-soft);
+  }
+
+  .hero-logo-wrapper {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .hero-logo-img {
+    filter: drop-shadow(0 8px 16px rgba(204, 120, 92, 0.15));
+  }
+
+  .pairing-demo-preview {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .demo-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .demo-beam {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--color-primary);
+  }
+
+  .beam-arrow {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .beam-text {
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  .demo-transfer-status {
+    width: 100%;
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+  }
+
+  .demo-file-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+  }
+
+  .demo-progress-bar {
+    width: 100%;
+    height: 6px;
+    background-color: var(--color-hairline);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+
+  .demo-progress-fill {
+    width: 74%;
+    height: 100%;
+    background-color: var(--color-primary);
+  }
+
+  /* Contrast Section */
+  .contrast-section {
+    padding: var(--spacing-section) 0;
+    background-color: var(--color-surface-soft);
+  }
+
+  .section-heading-centered {
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto var(--spacing-xxl);
+  }
+
+  .section-heading-centered h2 {
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .contrast-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xl);
+  }
+
+  .contrast-card {
+    background-color: var(--color-canvas);
+    padding: var(--spacing-xl);
+  }
+
+  .contrast-card.new-way {
+    border-color: rgba(204, 120, 92, 0.4);
+    box-shadow: 0 4px 20px rgba(204, 120, 92, 0.08);
+  }
+
+  .card-badge-pill {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .contrast-card h3 {
+    margin-bottom: var(--spacing-md);
+    font-size: 1.35rem;
+  }
+
+  .contrast-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .contrast-list li {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    position: relative;
+    padding-left: 20px;
+  }
+
+  .contrast-list li::before {
+    content: "•";
+    position: absolute;
+    left: 4px;
+    color: var(--color-muted);
+  }
+
+  .new-way .contrast-list li::before {
+    content: "✓";
+    color: var(--color-primary);
+    font-weight: bold;
+    left: 0;
+  }
+
+  /* Pillars */
+  .pillars-section {
+    padding: var(--spacing-section) 0;
+  }
+
+  .pillars-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-lg);
+  }
+
+  .pillar-card {
+    padding: var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pillar-icon {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .pillar-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .pillar-card p {
+    font-size: 0.925rem;
+    color: var(--color-muted);
+    margin-bottom: var(--spacing-md);
+    flex-grow: 1;
+  }
+
+  .pillar-link {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  /* Guides */
+  .guides-section {
+    padding: var(--spacing-section) 0;
+    border-top: 1px solid var(--color-hairline);
+  }
+
+  .section-header-flex {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-xl);
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+  }
+
+  .guides-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-lg);
+  }
+
+  .guide-tile {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+
+  .guide-tile:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-primary);
+  }
+
+  .guide-tile h4 {
+    font-family: var(--font-sans);
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+    color: var(--color-ink);
+  }
+
+  .guide-tile p {
+    font-size: 0.875rem;
+    color: var(--color-muted);
+    flex-grow: 1;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .guide-arrow {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-primary);
+  }
+
+  /* CTA */
+  .cta-section {
+    padding-bottom: var(--spacing-section);
+  }
+
+  .cta-card {
+    text-align: center;
+    padding: var(--spacing-xxl);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  @media (max-width: 960px) {
+    .hero-container {
+      grid-template-columns: 1fr;
+    }
+    .guides-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .pillars-grid {
+      grid-template-columns: 1fr;
+    }
+    .contrast-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .guides-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,23 +1,169 @@
+---
+import { siteConfig, getCanonicalUrl } from '../config/site';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  ogType?: 'website' | 'article';
+  ogImage?: string;
+  noindex?: boolean;
+  structuredData?: Record<string, any> | Record<string, any>[];
+}
+
+const {
+  title = `${siteConfig.siteName} — ${siteConfig.tagline}`,
+  description = siteConfig.description,
+  canonical = getCanonicalUrl(Astro.url.pathname),
+  ogType = 'website',
+  ogImage = siteConfig.defaultSocialImage,
+  noindex = false,
+  structuredData,
+} = Astro.props;
+
+const fullImageUrl = ogImage.startsWith('http') ? ogImage : `${siteConfig.siteUrl}${ogImage}`;
+---
+
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#faf9f5" />
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+    <!-- SEO Meta Tags -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex ? (
+      <meta name="robots" content="noindex, nofollow" />
+    ) : (
+      <meta name="robots" content="index, follow" />
+    )}
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content={siteConfig.siteName} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:image" content={fullImageUrl} />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content={siteConfig.twitterHandle} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={fullImageUrl} />
+
+    <!-- Typography Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Structured Data JSON-LD -->
+    {structuredData && (
+      <script
+        type="application/ld+json"
+        is:inline
+        set:html={JSON.stringify(structuredData)}
+      />
+    )}
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <a href="/" class="brand-link" aria-label="SlingShare Home">
+          <img src="/logo.png" alt="SlingShare Logo" class="brand-logo" width="38" height="38" />
+          <span class="brand-name">SlingShare</span>
+        </a>
+
+        <nav aria-label="Main Navigation">
+          <ul class="nav-links">
+            <li><a href="/docs/how-it-works" class="nav-link">How It Works</a></li>
+            <li><a href="/p2p-file-sharing" class="nav-link">P2P Sharing</a></li>
+            <li><a href="/airdrop-alternative" class="nav-link">AirDrop Alternative</a></li>
+            <li><a href="/security" class="nav-link">Security</a></li>
+            <li><a href="/docs" class="nav-link">Docs</a></li>
+          </ul>
+        </nav>
+
+        <div class="header-actions">
+          <a href="/app" class="btn btn-primary btn-sm">Launch App</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-col brand-col">
+            <a href="/" class="brand-link" style="color: var(--color-on-dark); margin-bottom: 16px;">
+              <img src="/logo.png" alt="SlingShare Logo" class="brand-logo" width="32" height="32" />
+              <span class="brand-name" style="color: var(--color-on-dark);">SlingShare</span>
+            </a>
+            <p style="font-size: 0.9rem; margin-top: 12px; color: var(--color-on-dark-soft); max-width: 320px;">
+              Fast, privacy-first peer-to-peer file and text sharing. No accounts, no storage, no tracking. Direct between your devices.
+            </p>
+          </div>
+
+          <div class="footer-col">
+            <h4>Product</h4>
+            <ul>
+              <li><a href="/app">Web App</a></li>
+              <li><a href="/text-sharing">Text Sharing</a></li>
+              <li><a href="/clipboard-sharing">Clipboard Sharing</a></li>
+              <li><a href="/share-files-without-uploading">Direct Sharing</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h4>Guides</h4>
+            <ul>
+              <li><a href="/how-to-send-files-between-phone-and-pc">Phone to PC</a></li>
+              <li><a href="/how-to-transfer-files-from-iphone-to-windows">iPhone to Windows</a></li>
+              <li><a href="/how-to-transfer-files-from-android-to-mac">Android to Mac</a></li>
+              <li><a href="/airdrop-alternative">AirDrop Alternative</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h4>Technology</h4>
+            <ul>
+              <li><a href="/docs/how-it-works">How It Works</a></li>
+              <li><a href="/p2p-file-sharing">P2P Architecture</a></li>
+              <li><a href="/docs/webrtc">WebRTC & NAT</a></li>
+              <li><a href="/docs/file-transfer">Chunking & Backpressure</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h4>Security & Privacy</h4>
+            <ul>
+              <li><a href="/security">Security Model</a></li>
+              <li><a href="/privacy">Privacy Policy</a></li>
+              <li><a href="/docs/troubleshooting">Troubleshooting</a></li>
+              <li><a href="/docs">All Documentation</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>© {new Date().getFullYear()} SlingShare. Peer-to-peer file transfer engine.</p>
+          <p>Zero server file storage • End-to-end encrypted transport</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

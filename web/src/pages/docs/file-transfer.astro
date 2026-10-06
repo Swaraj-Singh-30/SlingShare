@@ -1,0 +1,96 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getArticleSchema, getBreadcrumbSchema } from '../../config/site';
+
+const title = "File Chunking, Backpressure & SHA-256 Verification — SlingShare Docs";
+const description = "Technical details of SlingShare's file transfer engine: 64 KB binary chunk protocol, RTCDataChannel backpressure management, and SHA-256 verification.";
+const path = "/docs/file-transfer";
+
+const structuredData = [
+  getArticleSchema(title, description, path),
+  getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Documentation", path: "/docs" },
+    { name: "File Transfer & Chunking", path: path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} canonical={path} ogType="article" structuredData={structuredData}>
+  <div class="article-page">
+    <div class="container article-container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumbs">
+        <a href="/">Home</a> / <a href="/docs">Docs</a> / <span>File Transfer Engine</span>
+      </nav>
+
+      <header class="article-header">
+        <div class="badge badge-coral">Engine Architecture</div>
+        <h1>File Transfer: Chunking, Backpressure & Integrity</h1>
+        <p class="lead">
+          Streaming gigabyte-sized files over a browser data channel requires precise memory control and buffering coordination.
+        </p>
+      </header>
+
+      <div class="article-body">
+        <h2>1. The 64 KB Chunk Size Standard</h2>
+        <p>
+          Browsers enforce strict message size limits on <code>RTCDataChannel.send()</code>. Sending an entire file as a single message will crash the data channel with an <code>RTCError</code> or <code>MessageSizeExceeded</code> exception.
+        </p>
+        <p>
+          SlingShare slices every file into uniform <strong>64 KB (65,536 bytes)</strong> chunks. This size is the universally recognized optimum across Chromium, WebKit (Safari), and Gecko (Firefox) that avoids MTU packet fragmentation while maximizing throughput.
+        </p>
+
+        <h2>2. Binary Framing Protocol</h2>
+        <p>
+          Each chunk transmitted across the WebRTC channel is prefixed with a 24-byte binary header:
+        </p>
+        <div class="code-box card-dark">
+          <pre><code>+--------------------------+-----------------------+-----------------------+--------------------+
+| Transfer ID (16 bytes)   | Chunk Index (4 bytes) | Total Chunks (4 bytes)| Chunk Payload Data |
++--------------------------+-----------------------+-----------------------+--------------------+
+0                          16                      20                      24                  ...</code></pre>
+        </div>
+        <p>
+          This framing allows the receiver to deserialize incoming bytes unambiguously, track missing chunks, support resumable transfers, and reconstruct the file in exact index order.
+        </p>
+
+        <h2>3. Solving Memory Exhaustion with Backpressure</h2>
+        <p>
+          If you read a 2 GB file in a tight JavaScript loop and call <code>dataChannel.send()</code> repeatedly, the browser's underlying C++ SCTP buffer will balloon, exhausting system RAM and freezing the UI thread.
+        </p>
+        <p>
+          SlingShare implements an adaptive backpressure loop:
+        </p>
+        <ul>
+          <li><strong>High Watermark (1 MB):</strong> If <code>dataChannel.bufferedAmount &gt; 1 MB</code>, the send loop pauses asynchronously.</li>
+          <li><strong>Low Watermark (256 KB):</strong> The channel's <code>bufferedamountlow</code> event listener resumes the loop as soon as the network interface flushes pending packets.</li>
+        </ul>
+
+        <h2>4. Cryptographic SHA-256 Verification</h2>
+        <p>
+          Before dispatching, the sender calculates the full SHA-256 cryptographic digest using the browser's hardware-accelerated <code>crypto.subtle.digest</code>. When the receiver finishes collecting all chunks, it computes the checksum and verifies exact byte equality before exposing the file.
+        </p>
+
+        <div class="article-cta card-dark">
+          <h3>Test the transfer engine</h3>
+          <p style="color: var(--color-on-dark-soft); margin: 8px 0 20px;">Send a large file between two devices to see backpressure in action.</p>
+          <a href="/app" class="btn btn-primary">Launch SlingShare</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .article-page { padding: var(--spacing-xxl) 0; }
+  .article-container { max-width: 820px; }
+  .breadcrumb-nav { font-size: 0.85rem; color: var(--color-muted); margin-bottom: var(--spacing-lg); }
+  .article-header { margin-bottom: var(--spacing-xl); }
+  .article-header h1 { margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .article-body h2 { margin: var(--spacing-xl) 0 var(--spacing-sm); }
+  .article-body p { margin-bottom: var(--spacing-md); line-height: 1.65; }
+  .article-body ul { margin-bottom: var(--spacing-md); padding-left: 20px; line-height: 1.65; }
+  .code-box { overflow-x: auto; padding: var(--spacing-lg); margin: var(--spacing-lg) 0; border-radius: var(--radius-md); }
+  .code-box pre { margin: 0; line-height: 1.4; color: #a8d5a2; font-size: 0.825rem; }
+  .article-cta { margin-top: var(--spacing-xxl); padding: var(--spacing-xl); text-align: center; }
+</style>

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /app$
+Disallow: /app?*
+Disallow: /api/
+Disallow: /ws
+Disallow: /internal/
+
+Sitemap: https://slingshare.io/sitemap.xml

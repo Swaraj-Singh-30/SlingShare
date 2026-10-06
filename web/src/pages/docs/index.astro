@@ -1,0 +1,87 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getArticleSchema, getBreadcrumbSchema } from '../../config/site';
+
+const title = "SlingShare Documentation — Architecture, WebRTC & Transfer Protocols";
+const description = "Comprehensive technical documentation for SlingShare: signaling architecture, WebRTC peer negotiation, chunked file transfer, and troubleshooting.";
+const path = "/docs";
+
+const structuredData = [
+  getArticleSchema(title, description, path),
+  getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Documentation", path: path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} canonical={path} structuredData={structuredData}>
+  <div class="docs-page">
+    <div class="container docs-container">
+      <header class="docs-header">
+        <div class="badge badge-coral">Knowledge Base</div>
+        <h1>SlingShare Documentation</h1>
+        <p class="lead">
+          Technical architecture, protocol specifications, implementation notes, and troubleshooting guides.
+        </p>
+      </header>
+
+      <div class="docs-grid">
+        <a href="/docs/how-it-works" class="docs-card card">
+          <div class="docs-card-icon">⚙️</div>
+          <h3>How It Works</h3>
+          <p>Complete lifecycle walkthrough of device pairing, WebSocket signaling, and peer discovery.</p>
+          <span class="docs-card-arrow">Read article →</span>
+        </a>
+
+        <a href="/docs/webrtc" class="docs-card card">
+          <div class="docs-card-icon">🌐</div>
+          <h3>WebRTC & NAT Traversal</h3>
+          <p>STUN, TURN, ICE candidate gathering, and direct vs relayed connection topologies.</p>
+          <span class="docs-card-arrow">Read article →</span>
+        </a>
+
+        <a href="/docs/file-transfer" class="docs-card card">
+          <div class="docs-card-icon">📦</div>
+          <h3>File Transfer & Chunking</h3>
+          <p>64 KB chunk protocol, backpressure management with bufferedAmount, and SHA-256 verification.</p>
+          <span class="docs-card-arrow">Read article →</span>
+        </a>
+
+        <a href="/docs/troubleshooting" class="docs-card card">
+          <div class="docs-card-icon">🔧</div>
+          <h3>Troubleshooting & FAQs</h3>
+          <p>Resolving strict corporate firewalls, symmetric NATs, mobile background throttling, and permissions.</p>
+          <span class="docs-card-arrow">Read article →</span>
+        </a>
+      </div>
+
+      <div class="docs-callout card" style="margin-top: var(--spacing-xxl);">
+        <h3>Looking for platform-specific guides?</h3>
+        <p style="margin: 8px 0 16px;">Check our dedicated tutorials for common device combinations:</p>
+        <div class="guide-links-row">
+          <a href="/how-to-send-files-between-phone-and-pc" class="btn btn-secondary btn-sm">Phone to PC</a>
+          <a href="/how-to-transfer-files-from-iphone-to-windows" class="btn btn-secondary btn-sm">iPhone to Windows</a>
+          <a href="/how-to-transfer-files-from-android-to-mac" class="btn btn-secondary btn-sm">Android to Mac</a>
+          <a href="/airdrop-alternative" class="btn btn-secondary btn-sm">AirDrop Alternative</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .docs-page { padding: var(--spacing-xxl) 0; }
+  .docs-container { max-width: 840px; }
+  .docs-header { margin-bottom: var(--spacing-xxl); }
+  .docs-header h1 { margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .docs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg); }
+  .docs-card { text-decoration: none; color: inherit; display: flex; flex-direction: column; transition: transform 0.15s ease, border-color 0.15s ease; padding: var(--spacing-xl); }
+  .docs-card:hover { transform: translateY(-2px); border-color: var(--color-primary); }
+  .docs-card-icon { font-size: 2rem; margin-bottom: var(--spacing-sm); }
+  .docs-card h3 { font-size: 1.2rem; margin-bottom: 6px; color: var(--color-ink); }
+  .docs-card p { font-size: 0.9rem; color: var(--color-muted); flex-grow: 1; margin-bottom: var(--spacing-md); }
+  .docs-card-arrow { font-size: 0.85rem; font-weight: 500; color: var(--color-primary); }
+  .guide-links-row { display: flex; gap: var(--spacing-sm); flex-wrap: wrap; }
+  @media (max-width: 640px) { .docs-grid { grid-template-columns: 1fr; } }
+</style>

@@ -12,9 +12,14 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.3.5"
+    "@types/qrcode": "^1.5.6",
+    "astro": "^7.3.5",
+    "qrcode": "^1.5.4"
   },
   "allowScripts": {
     "esbuild": true
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
   }
 }

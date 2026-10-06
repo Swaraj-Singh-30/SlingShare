@@ -1,0 +1,93 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getArticleSchema, getBreadcrumbSchema } from '../../config/site';
+
+const title = "Troubleshooting & Frequently Asked Questions — SlingShare Docs";
+const description = "Solutions for common WebRTC connectivity issues: symmetric NATs, firewall blocking, mobile background tab throttling, and camera QR scanning.";
+const path = "/docs/troubleshooting";
+
+const structuredData = [
+  getArticleSchema(title, description, path),
+  getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Documentation", path: "/docs" },
+    { name: "Troubleshooting", path: path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} canonical={path} ogType="article" structuredData={structuredData}>
+  <div class="article-page">
+    <div class="container article-container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumbs">
+        <a href="/">Home</a> / <a href="/docs">Docs</a> / <span>Troubleshooting & FAQs</span>
+      </nav>
+
+      <header class="article-header">
+        <div class="badge badge-coral">Diagnostics & Help</div>
+        <h1>Troubleshooting & FAQs</h1>
+        <p class="lead">
+          Find answers and diagnostic steps for network, browser, and device connectivity questions.
+        </p>
+      </header>
+
+      <div class="article-body">
+        <div class="faq-list">
+          <div class="faq-item card">
+            <h3>Why is the connection stuck on "Connecting..."?</h3>
+            <p>
+              This typically happens if one of the devices is connected to an enterprise VPN, a guest Wi-Fi network with client isolation enabled, or behind a restrictive symmetric NAT.
+            </p>
+            <p>
+              <strong>Fix:</strong> Ensure both devices are connected to the same Wi-Fi network, or disconnect from corporate VPN tunnels that block UDP traffic.
+            </p>
+          </div>
+
+          <div class="faq-item card">
+            <h3>Why did my transfer pause when switching apps on mobile?</h3>
+            <p>
+              Both iOS (Safari) and Android (Chrome) aggressively throttle background JavaScript execution to conserve battery. When you switch away from the SlingShare tab or lock your phone screen, the browser suspends the WebRTC thread.
+            </p>
+            <p>
+              <strong>Fix:</strong> Keep the browser tab active on your mobile screen until the transfer completes. If interrupted, SlingShare will resume automatically upon reopening the tab.
+            </p>
+          </div>
+
+          <div class="faq-item card">
+            <h3>Can someone guess my 6-character room code?</h3>
+            <p>
+              SlingShare codes are drawn from an alphabet of 32 cryptographically random characters (over 1 billion permutations). Sessions are strictly limited to two peers and expire automatically.
+            </p>
+          </div>
+
+          <div class="faq-item card">
+            <h3>Does SlingShare work over cellular data (5G/4G)?</h3>
+            <p>
+              Yes. When one or both devices are on cellular data, STUN and TURN servers help establish the connection. However, local Wi-Fi will always provide significantly faster transfer speeds.
+            </p>
+          </div>
+        </div>
+
+        <div class="article-cta card-dark">
+          <h3>Still having connection issues?</h3>
+          <p style="color: var(--color-on-dark-soft); margin: 8px 0 20px;">Open the app and try creating a fresh session.</p>
+          <a href="/app" class="btn btn-primary">Launch SlingShare</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .article-page { padding: var(--spacing-xxl) 0; }
+  .article-container { max-width: 820px; }
+  .breadcrumb-nav { font-size: 0.85rem; color: var(--color-muted); margin-bottom: var(--spacing-lg); }
+  .article-header { margin-bottom: var(--spacing-xl); }
+  .article-header h1 { margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .faq-list { display: flex; flex-direction: column; gap: var(--spacing-md); margin: var(--spacing-lg) 0; }
+  .faq-item { padding: var(--spacing-xl); background-color: var(--color-surface-soft); }
+  .faq-item h3 { font-size: 1.15rem; margin-bottom: 8px; color: var(--color-ink); }
+  .faq-item p { margin-bottom: var(--spacing-xs); font-size: 0.95rem; line-height: 1.6; }
+  .faq-item p:last-child { margin-bottom: 0; }
+  .article-cta { margin-top: var(--spacing-xxl); padding: var(--spacing-xl); text-align: center; }
+</style>

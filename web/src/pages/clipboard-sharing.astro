@@ -1,0 +1,74 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getArticleSchema, getBreadcrumbSchema } from '../config/site';
+
+const title = "Cross-Device Clipboard Sharing Without Cloud Sync — SlingShare";
+const description = "Learn how to share clipboard content between your computer and phone without cloud synchronization, background keyloggers, or invasive permissions.";
+const path = "/clipboard-sharing";
+
+const structuredData = [
+  getArticleSchema(title, description, path),
+  getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Features", path: "/docs" },
+    { name: "Clipboard Sharing", path: path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} canonical={path} ogType="article" structuredData={structuredData}>
+  <div class="article-page">
+    <div class="container article-container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumbs">
+        <a href="/">Home</a> / <a href="/docs">Features</a> / <span>Clipboard Sharing</span>
+      </nav>
+
+      <header class="article-header">
+        <div class="badge badge-coral">Clipboard Privacy</div>
+        <h1>Cross-Device Clipboard Sharing Without Cloud Sync</h1>
+        <p class="lead">
+          Syncing clipboard text between devices can be incredibly productive, but traditional clipboard sync tools pose severe privacy hazards. Here is how SlingShare handles clipboard sharing responsibly.
+        </p>
+      </header>
+
+      <div class="article-body">
+        <h2>The Danger of Background Clipboard Sync</h2>
+        <p>
+          Many clipboard synchronization utilities install background services that monitor your system clipboard 24/7. Every password copied from a password manager, credit card number entered during checkout, and private message is captured and uploaded to a central cloud server.
+        </p>
+        <p>
+          This is an unacceptable security hazard for anyone handling sensitive data.
+        </p>
+
+        <h2>The SlingShare Security-First Clipboard Model</h2>
+        <p>
+          SlingShare strictly adheres to modern browser security boundaries and explicit user consent:
+        </p>
+        <ul>
+          <li><strong>No Background Monitoring:</strong> SlingShare will never read your clipboard in the background without an explicit click.</li>
+          <li><strong>Explicit "Paste Clipboard" Action:</strong> You press the dedicated button when you intentionally want to share your copied text.</li>
+          <li><strong>Explicit "Copy" Button:</strong> When your paired device receives text, your clipboard is not silently overwritten. You click "Copy" to put it onto your clipboard.</li>
+          <li><strong>Permission Graceful Handling:</strong> If the browser restricts the Async Clipboard API, a simple standard fallback is provided.</li>
+        </ul>
+
+        <div class="article-cta card-dark">
+          <h3>Try secure clipboard sharing</h3>
+          <p style="color: var(--color-on-dark-soft); margin: 8px 0 20px;">Protect your credentials while enjoying cross-device clipboard convenience.</p>
+          <a href="/app" class="btn btn-primary">Open SlingShare App</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .article-page { padding: var(--spacing-xxl) 0; }
+  .article-container { max-width: 780px; }
+  .breadcrumb-nav { font-size: 0.85rem; color: var(--color-muted); margin-bottom: var(--spacing-lg); }
+  .article-header { margin-bottom: var(--spacing-xl); }
+  .article-header h1 { margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .article-body h2 { margin: var(--spacing-xl) 0 var(--spacing-sm); }
+  .article-body p { margin-bottom: var(--spacing-md); line-height: 1.65; }
+  .article-body ul { margin-bottom: var(--spacing-md); padding-left: 20px; line-height: 1.65; }
+  .article-cta { margin-top: var(--spacing-xxl); padding: var(--spacing-xl); text-align: center; }
+</style>

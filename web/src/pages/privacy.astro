@@ -1,0 +1,85 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getArticleSchema, getBreadcrumbSchema } from '../config/site';
+
+const title = "Privacy Policy & Data Handling Practices — SlingShare";
+const description = "Our straightforward privacy commitment: zero file storage, zero content logging, no analytics tracking cookies, and no personal accounts.";
+const path = "/privacy";
+
+const structuredData = [
+  getArticleSchema(title, description, path),
+  getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Privacy Policy", path: path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} canonical={path} ogType="article" structuredData={structuredData}>
+  <div class="article-page">
+    <div class="container article-container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumbs">
+        <a href="/">Home</a> / <span>Privacy Policy</span>
+      </nav>
+
+      <header class="article-header">
+        <div class="badge badge-coral">Transparent Privacy</div>
+        <h1>SlingShare Privacy Policy</h1>
+        <p class="lead">
+          We believe the best privacy guarantee is not having your data in the first place. Here is exactly what happens when you use SlingShare.
+        </p>
+      </header>
+
+      <div class="article-body">
+        <h2>1. We Never Store Your Files</h2>
+        <p>
+          Files transferred using SlingShare pass directly from one peer device to another peer device over peer-to-peer WebRTC connections. Files do not touch our servers, our disks, or any third-party cloud storage (such as AWS S3, Google Cloud Storage, or Cloudinary).
+        </p>
+
+        <h2>2. We Never Read or Log Your Content</h2>
+        <p>
+          Our signaling server only coordinates the initial handshake (pairing room codes, WebRTC SDP offers, and ICE network addresses). We do not inspect, log, or store:
+        </p>
+        <ul>
+          <li>File contents or filenames</li>
+          <li>Shared text snippets, code, or URLs</li>
+          <li>Clipboard contents</li>
+        </ul>
+
+        <h2>3. No Accounts or Personal Information Required</h2>
+        <p>
+          You do not need to register, provide an email address, enter a phone number, or authenticate with social accounts to use SlingShare. Room identifiers are temporary and automatically destroyed when you close the session.
+        </p>
+
+        <h2>4. No Tracking Cookies or Third-Party Analytics</h2>
+        <p>
+          SlingShare does not use Google Analytics, advertising trackers, tracking pixels, or cross-site tracking cookies. The only data stored on your device is your preferred friendly device name in your browser's local storage (localStorage).
+        </p>
+
+        <h2>5. STUN and TURN Relays</h2>
+        <p>
+          To establish direct connections across complex home and office NAT firewalls, public STUN servers are queried to discover your public IP address. In rare cases where a direct peer-to-peer connection is blocked by a symmetric NAT, an encrypted TURN relay server may pass through packets without decrypting them (DTLS remains intact end-to-end).
+        </p>
+
+        <div class="article-cta card-dark">
+          <h3>Questions about our privacy model?</h3>
+          <p style="color: var(--color-on-dark-soft); margin: 8px 0 20px;">Review our technical documentation or test the application.</p>
+          <a href="/docs/how-it-works" class="btn btn-secondary" style="margin-right: 8px;">Technical Details</a>
+          <a href="/app" class="btn btn-primary">Launch SlingShare</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .article-page { padding: var(--spacing-xxl) 0; }
+  .article-container { max-width: 780px; }
+  .breadcrumb-nav { font-size: 0.85rem; color: var(--color-muted); margin-bottom: var(--spacing-lg); }
+  .article-header { margin-bottom: var(--spacing-xl); }
+  .article-header h1 { margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .article-body h2 { margin: var(--spacing-xl) 0 var(--spacing-sm); }
+  .article-body p { margin-bottom: var(--spacing-md); line-height: 1.65; }
+  .article-body ul { margin-bottom: var(--spacing-md); padding-left: 20px; line-height: 1.65; }
+  .article-cta { margin-top: var(--spacing-xxl); padding: var(--spacing-xl); text-align: center; }
+</style>

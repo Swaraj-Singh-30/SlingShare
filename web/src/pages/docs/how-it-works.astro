@@ -1,0 +1,104 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getArticleSchema, getBreadcrumbSchema } from '../../config/site';
+
+const title = "How SlingShare Works — Session Handshake & WebRTC Architecture";
+const description = "Technical walkthrough of the SlingShare architecture: Go WebSocket signaling, room codes, peer pairing, and WebRTC DataChannel establishment.";
+const path = "/docs/how-it-works";
+
+const structuredData = [
+  getArticleSchema(title, description, path),
+  getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Documentation", path: "/docs" },
+    { name: "How It Works", path: path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} canonical={path} ogType="article" structuredData={structuredData}>
+  <div class="article-page">
+    <div class="container article-container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumbs">
+        <a href="/">Home</a> / <a href="/docs">Docs</a> / <span>How It Works</span>
+      </nav>
+
+      <header class="article-header">
+        <div class="badge badge-coral">Protocol Walkthrough</div>
+        <h1>How SlingShare Works: Under the Hood</h1>
+        <p class="lead">
+          A step-by-step technical breakdown of session negotiation, signaling message flows, and data transport architecture.
+        </p>
+      </header>
+
+      <div class="article-body">
+        <h2>Architecture Diagram</h2>
+        <div class="code-box card-dark">
+          <pre><code>
+ Browser A (Host)                   Go Signaling Server                  Browser B (Peer)
+        |                                    |                                  |
+        |--- 1. WebSocket Connect ---------->|                                  |
+        |--- 2. create-session ------------->|                                  |
+        |<-- 3. session-created (AB7K2P) ----|                                  |
+        |                                    |<-- 4. WebSocket Connect ---------|
+        |                                    |<-- 5. join-session (AB7K2P) -----|
+        |<-- 6. peer-joined (Peer B) --------|--- 7. session-joined (Peer A) -->|
+        |                                    |                                  |
+        |--- 8. SDP Offer ------------------>|--- forwarded ------------------->|
+        |<-- forwarded ----------------------|<-- 9. SDP Answer ----------------|
+        |<=> ICE Candidate Exchange <=======>|<=> ICE Candidate Exchange <=====>|
+        |                                    |                                  |
+        |================= DIRECT WebRTC DATACHANNEL (DTLS) ====================|
+        |   - 64 KB Binary File Chunks                                          |
+        |   - Backpressure Management via bufferedamountlow                     |
+        |   - SHA-256 Checksum Validation                                       |
+        |   - Text & Snippet Payloads                                           |
+        |=======================================================================|
+          </code></pre>
+        </div>
+
+        <h2>Phase 1: WebSocket Signaling & Room Coordination</h2>
+        <p>
+          Because two arbitrary web browsers on different subnets or behind NATs cannot directly contact each other without prior introduction, a signaling server acts as a rendezvous broker.
+        </p>
+        <ul>
+          <li><strong>Host Device:</strong> Sends <code>{"{"}type: "create-session", deviceName: "MacBook"{"}"}</code>. The server generates a random 6-character room code (e.g. <code>AB7K2P</code>) and replies with <code>session-created</code>.</li>
+          <li><strong>Joining Device:</strong> Sends <code>{"{"}type: "join-session", sessionId: "AB7K2P"{"}"}</code>. The server notifies the host with <code>peer-joined</code> and sends peer details to the joiner with <code>session-joined</code>.</li>
+        </ul>
+
+        <h2>Phase 2: WebRTC Offer / Answer Handshake</h2>
+        <p>
+          Upon receiving the <code>peer-joined</code> notification, the Host device instantiates an <code>RTCPeerConnection</code> and creates an <code>RTCDataChannel</code> named <code>slingshare-transfer</code>.
+        </p>
+        <p>
+          It creates an SDP Offer, sets its local description, and forwards the offer through the signaling server. The joining peer sets its remote description, generates an SDP Answer, and sends it back. Both peers exchange ICE candidates until a direct network route is locked.
+        </p>
+
+        <h2>Phase 3: Direct DataChannel Transport</h2>
+        <p>
+          Once connected, the WebSocket signaling connection is no longer used for data. File chunks and text snippets pass over the SCTP-based DataChannel directly between the two browsers with end-to-end DTLS encryption.
+        </p>
+
+        <div class="article-cta card-dark">
+          <h3>Try SlingShare now</h3>
+          <p style="color: var(--color-on-dark-soft); margin: 8px 0 20px;">Open on two devices to test the handshake in real time.</p>
+          <a href="/app" class="btn btn-primary">Launch SlingShare</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .article-page { padding: var(--spacing-xxl) 0; }
+  .article-container { max-width: 820px; }
+  .breadcrumb-nav { font-size: 0.85rem; color: var(--color-muted); margin-bottom: var(--spacing-lg); }
+  .article-header { margin-bottom: var(--spacing-xl); }
+  .article-header h1 { margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .article-body h2 { margin: var(--spacing-xl) 0 var(--spacing-sm); }
+  .article-body p { margin-bottom: var(--spacing-md); line-height: 1.65; }
+  .article-body ul { margin-bottom: var(--spacing-md); padding-left: 20px; line-height: 1.65; }
+  .code-box { overflow-x: auto; padding: var(--spacing-lg); margin: var(--spacing-lg) 0; border-radius: var(--radius-md); }
+  .code-box pre { margin: 0; line-height: 1.4; color: #a8d5a2; font-size: 0.825rem; }
+  .article-cta { margin-top: var(--spacing-xxl); padding: var(--spacing-xl); text-align: center; }
+</style>

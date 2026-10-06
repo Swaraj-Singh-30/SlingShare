@@ -5,323 +5,344 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"sync"
+	"os"
+	"strings"
+	"time"
 
+	"github.com/Swaraj-Singh-30/SlingShare/internal/peer"
+	"github.com/Swaraj-Singh-30/SlingShare/internal/session"
 	"github.com/gorilla/websocket"
 )
 
 const (
 	roomCodeLength = 6
-	maxPeers       = 2
+	maxMessageSize = 65536 // 64 KB max signaling message limit
+	writeWait      = 10 * time.Second
+	pongWait       = 60 * time.Second
+	pingPeriod     = (pongWait * 9) / 10
 )
 
 type Server struct {
 	upgrader websocket.Upgrader
-
-	mu       sync.RWMutex
-	sessions map[string]map[*websocket.Conn]string
+	manager  *session.Manager
 }
 
 func NewServer() *Server {
 	return &Server{
 		upgrader: websocket.Upgrader{
+			ReadBufferSize:  4096,
+			WriteBufferSize: 4096,
 			CheckOrigin: func(r *http.Request) bool {
-				return true
+				return true // Allows pairing from different local hostnames / IPs
 			},
 		},
-		sessions: make(map[string]map[*websocket.Conn]string),
+		manager: session.NewManager(session.DefaultMaxPeersPerSession),
 	}
+}
+
+func (s *Server) GetManager() *session.Manager {
+	return s.manager
+}
+
+func (s *Server) GetIceServers() []IceServer {
+	var servers []IceServer
+
+	// STUN servers
+	stunEnv := os.Getenv("STUN_SERVERS")
+	if stunEnv == "" {
+		stunEnv = "stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302"
+	}
+	stunUrls := strings.Split(stunEnv, ",")
+	var cleanStun []string
+	for _, u := range stunUrls {
+		trimmed := strings.TrimSpace(u)
+		if trimmed != "" {
+			cleanStun = append(cleanStun, trimmed)
+		}
+	}
+	if len(cleanStun) > 0 {
+		servers = append(servers, IceServer{URLs: cleanStun})
+	}
+
+	// TURN server (optional)
+	turnServer := strings.TrimSpace(os.Getenv("TURN_SERVER"))
+	if turnServer != "" {
+		servers = append(servers, IceServer{
+			URLs:       []string{turnServer},
+			Username:   strings.TrimSpace(os.Getenv("TURN_USERNAME")),
+			Credential: strings.TrimSpace(os.Getenv("TURN_CREDENTIAL")),
+		})
+	}
+
+	return servers
+}
+
+func (s *Server) HandleConfig(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"iceServers": s.GetIceServers(),
+		"version":    "1.0.0",
+	})
 }
 
 func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("WebSocket upgrade failed:", err)
+		log.Println("[signaling] WebSocket upgrade failed:", err)
 		return
 	}
 
-	defer conn.Close()
+	conn.SetReadLimit(maxMessageSize)
+	_ = conn.SetReadDeadline(time.Now().Add(pongWait))
+	conn.SetPongHandler(func(string) error {
+		_ = conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
 
-	log.Println("WebSocket client connected")
+	var currentSessionID string
+	var currentPeer *peer.Peer
 
-	var sessionID string
-	var peerID string
+	// Ping ticker for keepalive
+	ticker := time.NewTicker(pingPeriod)
+	defer ticker.Stop()
+
+	// Done channel for cleanup
+	done := make(chan struct{})
+
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				if currentPeer != nil {
+					if err := currentPeer.SendMessage(websocket.PingMessage, []byte{}); err != nil {
+						return
+					}
+				} else {
+					_ = conn.SetWriteDeadline(time.Now().Add(writeWait))
+					if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+						return
+					}
+				}
+			case <-done:
+				return
+			}
+		}
+	}()
+
+	defer func() {
+		close(done)
+		if currentSessionID != "" && currentPeer != nil {
+			s.handlePeerDisconnect(currentSessionID, currentPeer.ID)
+		}
+		_ = conn.Close()
+	}()
 
 	for {
 		_, rawMessage, err := conn.ReadMessage()
 		if err != nil {
-			if sessionID != "" {
-				s.removePeer(sessionID, peerID, conn)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure) {
+				log.Printf("[signaling] Peer read error: %v", err)
 			}
-
-			log.Println("WebSocket connection closed:", err)
 			return
 		}
 
 		var msg Message
-
 		if err := json.Unmarshal(rawMessage, &msg); err != nil {
-			log.Println("Invalid message:", err)
+			log.Printf("[signaling] Invalid JSON received from client: %v", err)
 			continue
 		}
 
 		switch msg.Type {
 
 		case "create-session":
-			if sessionID != "" {
+			if currentSessionID != "" {
 				continue
 			}
 
-			sessionID = s.generateRoomCode()
-			peerID = s.generatePeerID()
+			roomCode := s.generateUniqueRoomCode()
+			s.manager.Create(roomCode)
 
-			s.mu.Lock()
+			peerID := s.generatePeerID()
+			currentPeer = peer.New(peerID, conn, msg.DeviceName, msg.DeviceType)
 
-			s.sessions[sessionID] = map[*websocket.Conn]string{
-				conn: peerID,
+			if err := s.manager.AddPeer(roomCode, currentPeer); err != nil {
+				_ = currentPeer.SendJSON(Message{
+					Type:  "error",
+					Error: "Failed to initialize session",
+				})
+				return
 			}
 
-			s.mu.Unlock()
+			currentSessionID = roomCode
 
-			s.sendMessage(conn, Message{
-				Type:      "session-created",
-				SessionID: sessionID,
-				PeerID:    peerID,
+			iceServers := s.GetIceServers()
+			_ = currentPeer.SendJSON(Message{
+				Type:       "session-created",
+				SessionID:  roomCode,
+				PeerID:     peerID,
+				DeviceName: currentPeer.DeviceName,
+				DeviceType: currentPeer.DeviceType,
+				IceServers: iceServers,
 			})
 
-			log.Printf(
-				"Peer %s created session %s",
-				peerID,
-				sessionID,
-			)
+			log.Printf("[signaling] Session created: %s by peer %s (%s)", roomCode, peerID, currentPeer.DeviceName)
 
 		case "join-session":
-			if sessionID != "" {
+			if currentSessionID != "" {
 				continue
 			}
 
-			if msg.SessionID == "" {
-				s.sendError(conn, "Session code is required")
+			code := strings.ToUpper(strings.TrimSpace(msg.SessionID))
+			if code == "" {
+				s.sendErrorDirect(conn, "Session code is required")
 				continue
 			}
 
-			s.mu.Lock()
-
-			peers, exists := s.sessions[msg.SessionID]
-
+			sess, exists := s.manager.Get(code)
 			if !exists {
-				s.mu.Unlock()
-				s.sendError(conn, "Session not found")
+				s.sendErrorDirect(conn, "Session not found or has expired")
 				continue
 			}
 
-			if len(peers) >= maxPeers {
-				s.mu.Unlock()
-				s.sendError(conn, "Session is full")
+			peerID := s.generatePeerID()
+			currentPeer = peer.New(peerID, conn, msg.DeviceName, msg.DeviceType)
+
+			// Get existing peers before adding the new one
+			existingPeers := sess.GetPeers()
+			var existingPeerInfos []PeerInfo
+			for _, ep := range existingPeers {
+				existingPeerInfos = append(existingPeerInfos, PeerInfo{
+					ID:         ep.ID,
+					DeviceName: ep.DeviceName,
+					DeviceType: ep.DeviceType,
+				})
+			}
+
+			if err := s.manager.AddPeer(code, currentPeer); err != nil {
+				s.sendErrorDirect(conn, err.Error())
+				currentPeer = nil
 				continue
 			}
 
-			sessionID = msg.SessionID
-			peerID = s.generatePeerID()
+			currentSessionID = code
+			iceServers := s.GetIceServers()
 
-			peers[conn] = peerID
-
-			s.mu.Unlock()
-
-			s.sendMessage(conn, Message{
-				Type:      "session-joined",
-				SessionID: sessionID,
-				PeerID:    peerID,
+			// Send session-joined to the joining peer with existing peers info
+			_ = currentPeer.SendJSON(Message{
+				Type:       "session-joined",
+				SessionID:  code,
+				PeerID:     peerID,
+				DeviceName: currentPeer.DeviceName,
+				DeviceType: currentPeer.DeviceType,
+				Peers:      existingPeerInfos,
+				IceServers: iceServers,
 			})
 
-			log.Printf(
-				"Peer %s joined session %s",
-				peerID,
-				sessionID,
-			)
+			log.Printf("[signaling] Peer %s (%s) joined session %s", peerID, currentPeer.DeviceName, code)
 
-			s.notifyPeerJoined(sessionID, conn, peerID)
+			// Notify existing peers that a new peer joined
+			for _, ep := range existingPeers {
+				_ = ep.SendJSON(Message{
+					Type:       "peer-joined",
+					SessionID:  code,
+					PeerID:     peerID,
+					DeviceName: currentPeer.DeviceName,
+					DeviceType: currentPeer.DeviceType,
+				})
+			}
 
 		case "offer", "answer", "ice-candidate":
-			if sessionID == "" {
+			if currentSessionID == "" || currentPeer == nil {
 				continue
 			}
 
-			s.forwardToPeer(
-				sessionID,
-				msg.TargetID,
-				rawMessage,
-			)
+			sess, exists := s.manager.Get(currentSessionID)
+			if !exists {
+				continue
+			}
+
+			targetPeer, ok := sess.GetPeer(msg.TargetID)
+			if !ok {
+				log.Printf("[signaling] Target peer %s not found in session %s", msg.TargetID, currentSessionID)
+				continue
+			}
+
+			// Forward message with sender PeerID attached
+			msg.PeerID = currentPeer.ID
+			msg.SessionID = currentSessionID
+			_ = targetPeer.SendJSON(msg)
+
+		case "leave-session":
+			if currentSessionID != "" && currentPeer != nil {
+				s.handlePeerDisconnect(currentSessionID, currentPeer.ID)
+				currentSessionID = ""
+				currentPeer = nil
+			}
 		}
 	}
 }
 
-func (s *Server) removePeer(
-	sessionID string,
-	peerID string,
-	conn *websocket.Conn,
-) {
-	s.mu.Lock()
+func (s *Server) handlePeerDisconnect(sessionID, peerID string) {
+	_, remaining := s.manager.RemovePeer(sessionID, peerID)
+	log.Printf("[signaling] Peer %s left session %s (%d peers remaining)", peerID, sessionID, remaining)
 
-	peers, exists := s.sessions[sessionID]
-
-	if !exists {
-		s.mu.Unlock()
-		return
-	}
-
-	delete(peers, conn)
-
-	remainingPeers := make([]*websocket.Conn, 0)
-
-	for peerConn := range peers {
-		remainingPeers = append(remainingPeers, peerConn)
-	}
-
-	if len(peers) == 0 {
-		delete(s.sessions, sessionID)
-	}
-
-	s.mu.Unlock()
-
-	for _, peerConn := range remainingPeers {
-		s.sendMessage(peerConn, Message{
-			Type:   "peer-left",
-			PeerID: peerID,
-		})
-	}
-
-	log.Printf(
-		"Peer %s left session %s",
-		peerID,
-		sessionID,
-	)
-}
-
-func (s *Server) notifyPeerJoined(
-	sessionID string,
-	newConn *websocket.Conn,
-	newPeerID string,
-) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	peers := s.sessions[sessionID]
-
-	for conn := range peers {
-		if conn == newConn {
-			continue
+	if remaining > 0 {
+		if sess, exists := s.manager.Get(sessionID); exists {
+			for _, p := range sess.GetPeers() {
+				_ = p.SendJSON(Message{
+					Type:      "peer-left",
+					SessionID: sessionID,
+					PeerID:    peerID,
+				})
+			}
 		}
-
-		s.sendMessage(conn, Message{
-			Type:   "peer-joined",
-			PeerID: newPeerID,
-		})
 	}
 }
 
-func (s *Server) forwardToPeer(
-	sessionID string,
-	targetID string,
-	rawMessage []byte,
-) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	peers := s.sessions[sessionID]
-
-	for conn, peerID := range peers {
-		if peerID != targetID {
-			continue
-		}
-
-		err := conn.WriteMessage(
-			websocket.TextMessage,
-			rawMessage,
-		)
-
-		if err != nil {
-			log.Println("Failed to forward message:", err)
-		}
-
-		return
-	}
-}
-
-func (s *Server) sendMessage(
-	conn *websocket.Conn,
-	message Message,
-) {
-	data, err := json.Marshal(message)
-
-	if err != nil {
-		log.Println("Failed to marshal message:", err)
-		return
-	}
-
-	err = conn.WriteMessage(
-		websocket.TextMessage,
-		data,
-	)
-
-	if err != nil {
-		log.Println("WebSocket write failed:", err)
-	}
-}
-
-func (s *Server) sendError(
-	conn *websocket.Conn,
-	message string,
-) {
-	data, err := json.Marshal(message)
-
-	if err != nil {
-		log.Println("Failed to marshal error:", err)
-		return
-	}
-
-	s.sendMessage(conn, Message{
-		Type: "error",
-		Data: data,
+func (s *Server) sendErrorDirect(conn *websocket.Conn, message string) {
+	data, _ := json.Marshal(Message{
+		Type:  "error",
+		Error: message,
 	})
+	_ = conn.SetWriteDeadline(time.Now().Add(writeWait))
+	_ = conn.WriteMessage(websocket.TextMessage, data)
+}
+
+func (s *Server) generateUniqueRoomCode() string {
+	for {
+		code := s.generateRoomCode()
+		if _, exists := s.manager.Get(code); !exists {
+			return code
+		}
+	}
 }
 
 func (s *Server) generateRoomCode() string {
 	const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-
 	randomBytes := make([]byte, roomCodeLength)
-
 	_, err := rand.Read(randomBytes)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to generate random bytes: %v", err)
 	}
 
 	result := make([]byte, roomCodeLength)
-
 	for i := 0; i < roomCodeLength; i++ {
-		index := int(randomBytes[i]) % len(characters)
-		result[i] = characters[index]
+		result[i] = characters[int(randomBytes[i])%len(characters)]
 	}
-
 	return string(result)
 }
 
 func (s *Server) generatePeerID() string {
-	const characters = "abcdefghijklmnopqrstuvwxyz0123456789"
-
+	const characters = "abcdefghjkmnpqrstuvwxyz23456789"
 	randomBytes := make([]byte, 8)
-
 	_, err := rand.Read(randomBytes)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to generate random bytes: %v", err)
 	}
 
 	result := make([]byte, 8)
-
 	for i := 0; i < 8; i++ {
-		index := int(randomBytes[i]) % len(characters)
-		result[i] = characters[index]
+		result[i] = characters[int(randomBytes[i])%len(characters)]
 	}
-
 	return string(result)
 }

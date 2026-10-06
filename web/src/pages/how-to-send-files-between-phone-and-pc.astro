@@ -1,0 +1,168 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getArticleSchema, getBreadcrumbSchema } from '../config/site';
+
+const title = "Transfer Files From Phone to PC Without Uploading — SlingShare Guide";
+const description = "Learn how to send photos, videos, and large files directly between your phone and PC over your local Wi-Fi network without cables, cloud drives, or account registrations.";
+const path = "/how-to-send-files-between-phone-and-pc";
+
+const structuredData = [
+  getArticleSchema(title, description, path),
+  getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Guides", path: "/docs" },
+    { name: "Phone to PC Transfer", path: path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} canonical={path} ogType="article" structuredData={structuredData}>
+  <div class="article-page">
+    <div class="container article-container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumbs">
+        <a href="/">Home</a> / <a href="/docs">Guides</a> / <span>Phone to PC Transfer</span>
+      </nav>
+
+      <header class="article-header">
+        <div class="badge badge-coral">Practical Guide</div>
+        <h1>How to Transfer Files Between Phone and PC Without Uploading</h1>
+        <p class="lead">
+          Skip slow cloud uploads, messy USB driver installations, and email size limits. Here is how to create a direct, encrypted peer-to-peer connection between your mobile device and your desktop in under 10 seconds.
+        </p>
+      </header>
+
+      <div class="article-body">
+        <h2>The Traditional Problem</h2>
+        <p>
+          Most methods for transferring files from a phone to a PC are unexpectedly painful. Cloud services like Google Drive, Dropbox, or OneDrive require you to upload the file to a remote server, wait for synchronization, open the web interface on your PC, download the file, and then remember to delete it later so it doesn't consume your storage quota.
+        </p>
+        <p>
+          USB cables often require unlocking the phone, accepting permission prompts, installing manufacturer drivers (especially on Windows), or dealing with unreliable file transfer utilities.
+        </p>
+
+        <h2>Step-by-Step: The SlingShare P2P Approach</h2>
+        <div class="steps-container">
+          <div class="step-card card">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <h3>Open SlingShare on Your PC</h3>
+              <p>
+                Navigate to <a href="/app">slingshare.io/app</a> on your computer's browser (Chrome, Edge, Firefox, or Safari). Click <strong>Create Session</strong> to generate a secure, temporary 6-character room code and pairing QR code.
+              </p>
+            </div>
+          </div>
+
+          <div class="step-card card">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <h3>Scan the QR Code on Your Phone</h3>
+              <p>
+                Open your smartphone's camera app (iOS or Android) and point it at the QR code displayed on your PC screen. Tap the link to open SlingShare in your mobile browser. Alternatively, visit the site and type the 6-character code.
+              </p>
+            </div>
+          </div>
+
+          <div class="step-card card">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <h3>Devices Connect Directly via WebRTC</h3>
+              <p>
+                Both browsers automatically perform a lightweight signaling handshake and establish a direct WebRTC DataChannel connection. When on the same local Wi-Fi network, the data flows directly across your router at local LAN speed without hitting any external servers.
+              </p>
+            </div>
+          </div>
+
+          <div class="step-card card">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <h3>Select and Send Files</h3>
+              <p>
+                Tap the drop zone on your phone, choose any number of photos, videos, or documents, and send. The files are sliced into memory-safe 64 KB chunks, transferred with backpressure management, and cryptographically verified using SHA-256 before saving on your PC.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <h2>Why WebRTC Direct Transfer Is Better for Large Files</h2>
+        <p>
+          When you send a 2 GB 4K video using cloud drives, your phone uploads 2 GB over your internet connection's upload speed (which is often much slower than download speed), and your PC downloads 2 GB.
+        </p>
+        <p>
+          With WebRTC peer-to-peer transfer, your data never leaves your local Wi-Fi router. Transfers can operate at speeds of 50 MB/s to over 150 MB/s depending on your local Wi-Fi standard (Wi-Fi 6 or 6E), with zero bandwidth consumption on your ISP plan.
+        </p>
+
+        <div class="article-cta card-dark">
+          <h3>Ready to transfer files now?</h3>
+          <p style="color: var(--color-on-dark-soft); margin: 8px 0 20px;">No download or setup needed. Open the browser and begin.</p>
+          <a href="/app" class="btn btn-primary">Launch SlingShare</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .article-page {
+    padding: var(--spacing-xxl) 0;
+  }
+  .article-container {
+    max-width: 780px;
+  }
+  .breadcrumb-nav {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    margin-bottom: var(--spacing-lg);
+  }
+  .article-header {
+    margin-bottom: var(--spacing-xl);
+  }
+  .article-header h1 {
+    margin: var(--spacing-sm) 0 var(--spacing-md);
+  }
+  .article-body h2 {
+    margin: var(--spacing-xl) 0 var(--spacing-sm);
+  }
+  .article-body p {
+    margin-bottom: var(--spacing-md);
+    line-height: 1.65;
+  }
+  .steps-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin: var(--spacing-lg) 0;
+  }
+  .step-card {
+    display: flex;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background-color: var(--color-surface-soft);
+  }
+  .step-num {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-family: var(--font-display);
+    color: var(--color-primary);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-canvas);
+    flex-shrink: 0;
+  }
+  .step-content h3 {
+    font-size: 1.15rem;
+    margin-bottom: 6px;
+  }
+  .step-content p {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+  .article-cta {
+    margin-top: var(--spacing-xxl);
+    padding: var(--spacing-xl);
+    text-align: center;
+  }
+</style>

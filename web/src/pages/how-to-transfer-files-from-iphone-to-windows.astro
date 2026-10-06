@@ -1,0 +1,107 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getArticleSchema, getBreadcrumbSchema } from '../config/site';
+
+const title = "How to Transfer Files From iPhone to Windows Wirelessly — SlingShare";
+const description = "Move photos, ProRes videos, and large documents from iPhone to Windows PC without iTunes, iCloud limits, or Lightning/USB-C cables using WebRTC.";
+const path = "/how-to-transfer-files-from-iphone-to-windows";
+
+const structuredData = [
+  getArticleSchema(title, description, path),
+  getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Guides", path: "/docs" },
+    { name: "iPhone to Windows Transfer", path: path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} canonical={path} ogType="article" structuredData={structuredData}>
+  <div class="article-page">
+    <div class="container article-container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumbs">
+        <a href="/">Home</a> / <a href="/docs">Guides</a> / <span>iPhone to Windows</span>
+      </nav>
+
+      <header class="article-header">
+        <div class="badge badge-coral">iOS to Windows Guide</div>
+        <h1>Transfer Files From iPhone to Windows Wirelessly</h1>
+        <p class="lead">
+          AirDrop only works within the Apple walled garden. SlingShare gives you the same effortless experience when pairing an iPhone with a Windows desktop or laptop.
+        </p>
+      </header>
+
+      <div class="article-body">
+        <h2>Why iOS to Windows Has Always Been Friction-Heavy</h2>
+        <p>
+          While transferring files between an iPhone and a Mac is instant thanks to AirDrop, connecting an iPhone to a Windows PC often entails:
+        </p>
+        <ul>
+          <li>Dealing with Apple's 5 GB free iCloud quota bottleneck</li>
+          <li>Connecting a cable and granting "Trust This Computer" security permissions</li>
+          <li>Encountering intermittent Windows File Explorer connection freezes with large DCIM camera folders</li>
+          <li>Installing proprietary third-party apps or cumbersome desktop sync utilities</li>
+        </ul>
+
+        <h2>The Browser-Based AirDrop Alternative</h2>
+        <p>
+          Because WebRTC (Web Real-Time Communication) is supported natively by Safari on iOS and Chrome/Edge on Windows, SlingShare establishes an encrypted peer-to-peer connection directly between both browser tabs.
+        </p>
+
+        <div class="steps-container">
+          <div class="step-card card">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <h3>Start Session on Windows</h3>
+              <p>Open <a href="/app">SlingShare</a> on your Windows PC and click <strong>Create Session</strong> to reveal your 6-digit room code and pairing QR code.</p>
+            </div>
+          </div>
+
+          <div class="step-card card">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <h3>Scan with iPhone Camera</h3>
+              <p>Point your iPhone camera at the Windows monitor. Tap the yellow Safari notification to pair your devices instantly.</p>
+            </div>
+          </div>
+
+          <div class="step-card card">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <h3>Select Photos or Files</h3>
+              <p>Tap the upload area on iPhone, choose your media library or Files app, and tap send. Files are transmitted locally at full Wi-Fi speed and automatically save to your Windows Downloads folder.</p>
+            </div>
+          </div>
+        </div>
+
+        <h2>Security & Privacy Benefits</h2>
+        <p>
+          Your personal photos, medical records, or confidential work documents are never uploaded to an intermediate cloud server. The connection uses DTLS-SRTP encryption, identical to the security used in confidential telecommunications.
+        </p>
+
+        <div class="article-cta card-dark">
+          <h3>Try it now between your iPhone and PC</h3>
+          <p style="color: var(--color-on-dark-soft); margin: 8px 0 20px;">Zero install. Works on Safari and Edge/Chrome.</p>
+          <a href="/app" class="btn btn-primary">Launch SlingShare</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .article-page { padding: var(--spacing-xxl) 0; }
+  .article-container { max-width: 780px; }
+  .breadcrumb-nav { font-size: 0.85rem; color: var(--color-muted); margin-bottom: var(--spacing-lg); }
+  .article-header { margin-bottom: var(--spacing-xl); }
+  .article-header h1 { margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .article-body h2 { margin: var(--spacing-xl) 0 var(--spacing-sm); }
+  .article-body p { margin-bottom: var(--spacing-md); line-height: 1.65; }
+  .article-body ul { margin-bottom: var(--spacing-md); padding-left: 20px; line-height: 1.65; }
+  .steps-container { display: flex; flex-direction: column; gap: var(--spacing-md); margin: var(--spacing-lg) 0; }
+  .step-card { display: flex; gap: var(--spacing-lg); padding: var(--spacing-lg); background-color: var(--color-surface-soft); }
+  .step-num { font-size: 1.5rem; font-weight: 700; font-family: var(--font-display); color: var(--color-primary); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-pill); background-color: var(--color-canvas); flex-shrink: 0; }
+  .step-content h3 { font-size: 1.15rem; margin-bottom: 6px; }
+  .step-content p { margin: 0; font-size: 0.95rem; }
+  .article-cta { margin-top: var(--spacing-xxl); padding: var(--spacing-xl); text-align: center; }
+</style>

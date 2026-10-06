@@ -1,0 +1,103 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getArticleSchema, getBreadcrumbSchema } from '../config/site';
+
+const title = "How to Transfer Files From Android to Mac Wirelessly — SlingShare";
+const description = "Easily move photos, videos, and downloads from Android to Mac without Android File Transfer crashes, cables, or cloud storage limits.";
+const path = "/how-to-transfer-files-from-android-to-mac";
+
+const structuredData = [
+  getArticleSchema(title, description, path),
+  getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Guides", path: "/docs" },
+    { name: "Android to Mac Transfer", path: path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} canonical={path} ogType="article" structuredData={structuredData}>
+  <div class="article-page">
+    <div class="container article-container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumbs">
+        <a href="/">Home</a> / <a href="/docs">Guides</a> / <span>Android to Mac</span>
+      </nav>
+
+      <header class="article-header">
+        <div class="badge badge-coral">Android to macOS Guide</div>
+        <h1>Transfer Files From Android to Mac Wirelessly</h1>
+        <p class="lead">
+          Google's legacy Android File Transfer utility on macOS is notorious for crashes and connection dropouts. SlingShare uses native browser WebRTC to transfer files directly with zero friction.
+        </p>
+      </header>
+
+      <div class="article-body">
+        <h2>The Pain of Connecting Android to macOS</h2>
+        <p>
+          Unlike Windows, macOS does not natively mount Android MTP (Media Transfer Protocol) devices in Finder. For years, users had to rely on the outdated Android File Transfer tool, which frequently fails with errors like <em>"Could not connect to device"</em> or disconnects halfway through a large transfer.
+        </p>
+
+        <h2>The Seamless Solution: SlingShare in Browser</h2>
+        <p>
+          Whether you use a Google Pixel, Samsung Galaxy, OnePlus, or Xiaomi phone, you have Chrome or Firefox installed. And on your Mac, you have Safari or Chrome. SlingShare pairs them directly over your home or office Wi-Fi network.
+        </p>
+
+        <div class="steps-container">
+          <div class="step-card card">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <h3>Open SlingShare on Mac</h3>
+              <p>Navigate to <a href="/app">slingshare.io/app</a> on your Mac. Click <strong>Create Session</strong> to generate your room code.</p>
+            </div>
+          </div>
+
+          <div class="step-card card">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <h3>Scan or Enter Code on Android</h3>
+              <p>Scan the QR code with your camera or Google Lens to immediately join the same sharing room.</p>
+            </div>
+          </div>
+
+          <div class="step-card card">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <h3>Stream Media and Documents</h3>
+              <p>Drop or select files from Android storage. The files stream over your local Wi-Fi router straight to your Mac's browser.</p>
+            </div>
+          </div>
+        </div>
+
+        <h2>Features Designed for High-Bandwidth Transfers</h2>
+        <ul>
+          <li><strong>Adaptive Backpressure:</strong> Large multi-gigabyte video files will not freeze your phone or laptop.</li>
+          <li><strong>SHA-256 Integrity Verification:</strong> Guarantees bit-by-bit accuracy on reception.</li>
+          <li><strong>Resumable Transfers:</strong> If Wi-Fi briefly flickers, the transfer pauses and resumes without starting from scratch.</li>
+        </ul>
+
+        <div class="article-cta card-dark">
+          <h3>Try it now between Android and Mac</h3>
+          <p style="color: var(--color-on-dark-soft); margin: 8px 0 20px;">Open in any modern browser. No drivers or cable required.</p>
+          <a href="/app" class="btn btn-primary">Launch SlingShare</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .article-page { padding: var(--spacing-xxl) 0; }
+  .article-container { max-width: 780px; }
+  .breadcrumb-nav { font-size: 0.85rem; color: var(--color-muted); margin-bottom: var(--spacing-lg); }
+  .article-header { margin-bottom: var(--spacing-xl); }
+  .article-header h1 { margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .article-body h2 { margin: var(--spacing-xl) 0 var(--spacing-sm); }
+  .article-body p { margin-bottom: var(--spacing-md); line-height: 1.65; }
+  .article-body ul { margin-bottom: var(--spacing-md); padding-left: 20px; line-height: 1.65; }
+  .steps-container { display: flex; flex-direction: column; gap: var(--spacing-md); margin: var(--spacing-lg) 0; }
+  .step-card { display: flex; gap: var(--spacing-lg); padding: var(--spacing-lg); background-color: var(--color-surface-soft); }
+  .step-num { font-size: 1.5rem; font-weight: 700; font-family: var(--font-display); color: var(--color-primary); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-pill); background-color: var(--color-canvas); flex-shrink: 0; }
+  .step-content h3 { font-size: 1.15rem; margin-bottom: 6px; }
+  .step-content p { margin: 0; font-size: 0.95rem; }
+  .article-cta { margin-top: var(--spacing-xxl); padding: var(--spacing-xl); text-align: center; }
+</style>

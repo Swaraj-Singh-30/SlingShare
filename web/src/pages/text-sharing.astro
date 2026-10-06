@@ -1,0 +1,85 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getArticleSchema, getBreadcrumbSchema } from '../config/site';
+
+const title = "Send Text Between Devices Instantly — SlingShare";
+const description = "Share long text, code snippets, notes, and links between your phone, laptop, and PC without emailing yourself or using chat apps.";
+const path = "/text-sharing";
+
+const structuredData = [
+  getArticleSchema(title, description, path),
+  getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Features", path: "/docs" },
+    { name: "Text Sharing", path: path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} canonical={path} ogType="article" structuredData={structuredData}>
+  <div class="article-page">
+    <div class="container article-container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumbs">
+        <a href="/">Home</a> / <a href="/docs">Features</a> / <span>Text Sharing</span>
+      </nav>
+
+      <header class="article-header">
+        <div class="badge badge-coral">Instant Snippets</div>
+        <h1>Send Text, Code & URLs Directly Between Devices</h1>
+        <p class="lead">
+          Stop emailing yourself two-factor codes, URLs, or code snippets. SlingShare lets you stream text directly between devices with instant copy controls.
+        </p>
+      </header>
+
+      <div class="article-body">
+        <h2>The Everyday Annoyance of Sending Text to Yourself</h2>
+        <p>
+          We've all done it: drafting an email to our own email address, opening a personal WhatsApp or Slack DM channel, or creating a temporary Google Doc just to copy a long URL, API key, address, or terminal command from our phone to our computer.
+        </p>
+        <p>
+          Not only is this inefficient, it also leaves sensitive text (like authentication tokens or passwords) permanently logged in chat history and email sent folders.
+        </p>
+
+        <h2>How Text Sharing in SlingShare Works</h2>
+        <p>
+          When you pair your phone and computer on SlingShare, the text sharing tab gives you an instantaneous scratchpad:
+        </p>
+
+        <div class="feature-bullets card">
+          <div class="bullet-item">
+            <strong>🔗 Automatic URL Recognition:</strong> Web links sent across the channel are automatically detected and rendered as clickable hyperlinks.
+          </div>
+          <div class="bullet-item">
+            <strong>📋 One-Click Copy:</strong> Each received snippet features a dedicated "Copy" button with instantaneous clipboard feedback.
+          </div>
+          <div class="bullet-item">
+            <strong>🔒 Zero Storage / Zero Persistence:</strong> Messages exist solely in browser volatile RAM for the duration of the pairing session.
+          </div>
+          <div class="bullet-item">
+            <strong>⚡ Sub-Millisecond Latency:</strong> Because text travels directly across WebRTC DataChannels, latency is negligible.
+          </div>
+        </div>
+
+        <div class="article-cta card-dark">
+          <h3>Try instant text sharing</h3>
+          <p style="color: var(--color-on-dark-soft); margin: 8px 0 20px;">Fast, private, and leaves no digital footprint.</p>
+          <a href="/app" class="btn btn-primary">Open SlingShare App</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .article-page { padding: var(--spacing-xxl) 0; }
+  .article-container { max-width: 780px; }
+  .breadcrumb-nav { font-size: 0.85rem; color: var(--color-muted); margin-bottom: var(--spacing-lg); }
+  .article-header { margin-bottom: var(--spacing-xl); }
+  .article-header h1 { margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .article-body h2 { margin: var(--spacing-xl) 0 var(--spacing-sm); }
+  .article-body p { margin-bottom: var(--spacing-md); line-height: 1.65; }
+  .feature-bullets { display: flex; flex-direction: column; gap: var(--spacing-md); padding: var(--spacing-xl); background-color: var(--color-surface-soft); margin: var(--spacing-lg) 0; }
+  .bullet-item { font-size: 0.95rem; }
+  .bullet-item strong { color: var(--color-ink); display: block; margin-bottom: 2px; }
+  .article-cta { margin-top: var(--spacing-xxl); padding: var(--spacing-xl); text-align: center; }
+</style>

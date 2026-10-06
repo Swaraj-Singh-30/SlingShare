@@ -1,0 +1,104 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getArticleSchema, getBreadcrumbSchema } from '../config/site';
+
+const title = "Share Files Without Uploading to Cloud Storage — SlingShare";
+const description = "Learn why zero-upload peer-to-peer file transfer is faster, more private, and removes file size quotas by streaming data directly between browser endpoints.";
+const path = "/share-files-without-uploading";
+
+const structuredData = [
+  getArticleSchema(title, description, path),
+  getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Concepts", path: "/docs" },
+    { name: "Zero Upload Sharing", path: path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} canonical={path} ogType="article" structuredData={structuredData}>
+  <div class="article-page">
+    <div class="container article-container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumbs">
+        <a href="/">Home</a> / <a href="/docs">Concepts</a> / <span>Zero-Upload Sharing</span>
+      </nav>
+
+      <header class="article-header">
+        <div class="badge badge-coral">Architecture Concept</div>
+        <h1>Share Files Without Uploading to the Cloud</h1>
+        <p class="lead">
+          Why upload a file to someone else's server when the recipient is right in front of you? Discover the mechanics and privacy benefits of direct stream transmission.
+        </p>
+      </header>
+
+      <div class="article-body">
+        <h2>What Does "Sharing Without Uploading" Mean?</h2>
+        <p>
+          In traditional file hosting (Google Drive, WeTransfer, Dropbox), sharing is a two-step process:
+        </p>
+        <ol>
+          <li><strong>Step 1:</strong> You upload the entire file to a central server's disk storage.</li>
+          <li><strong>Step 2:</strong> The recipient downloads that file from the central server.</li>
+        </ol>
+        <p>
+          With SlingShare, there is no intermediate disk. Your file never touches the server's filesystem or cloud database. Instead, the sender reads the file from local storage, converts it into memory-safe chunks, and streams those chunks directly across an encrypted peer-to-peer tunnel (WebRTC DataChannel) directly into the recipient's browser memory.
+        </p>
+
+        <h2>Key Benefits of Zero-Upload Sharing</h2>
+
+        <div class="benefit-grid">
+          <div class="card benefit-card">
+            <h3>Absolute Confidentiality</h3>
+            <p>Because no server ever hosts your file, there is no chance of cloud data leaks, subpoenas against third-party hosts, or AI training scans on your files.</p>
+          </div>
+
+          <div class="card benefit-card">
+            <h3>No File Size Restrictions</h3>
+            <p>Cloud services cap free transfers at 2 GB or 5 GB to protect server disk space. With P2P streaming, transfers are constrained only by local memory and storage.</p>
+          </div>
+
+          <div class="card benefit-card">
+            <h3>Local Wi-Fi Speeds</h3>
+            <p>When devices are on the same Wi-Fi router, data packets route locally via LAN without traveling out to the wider internet, reaching speeds exceeding 1 Gbps.</p>
+          </div>
+
+          <div class="card benefit-card">
+            <h3>Zero Cleanup Required</h3>
+            <p>You don't need to return to your cloud drive days later to delete temporary files. When the browser closes, the ephemeral session is gone forever.</p>
+          </div>
+        </div>
+
+        <h2>How Signaling Works Without Handling File Data</h2>
+        <p>
+          To connect two browsers across the internet, they need to exchange their IP addresses and cryptographic fingerprints. SlingShare uses a lightweight Go signaling server exclusively to orchestrate this initial introduction (SDP offer/answer and ICE candidate exchange).
+        </p>
+        <p>
+          The signaling server strictly enforces a 64 KB message size limit, ensuring that zero file content can ever travel through the signaling infrastructure. Once the WebRTC connection is negotiated, all data moves directly between peers.
+        </p>
+
+        <div class="article-cta card-dark">
+          <h3>Try zero-upload sharing right now</h3>
+          <p style="color: var(--color-on-dark-soft); margin: 8px 0 20px;">Open SlingShare on two devices and experience direct P2P transfer.</p>
+          <a href="/app" class="btn btn-primary">Launch SlingShare</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .article-page { padding: var(--spacing-xxl) 0; }
+  .article-container { max-width: 780px; }
+  .breadcrumb-nav { font-size: 0.85rem; color: var(--color-muted); margin-bottom: var(--spacing-lg); }
+  .article-header { margin-bottom: var(--spacing-xl); }
+  .article-header h1 { margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .article-body h2 { margin: var(--spacing-xl) 0 var(--spacing-sm); }
+  .article-body p { margin-bottom: var(--spacing-md); line-height: 1.65; }
+  .article-body ol { margin-bottom: var(--spacing-md); padding-left: 20px; line-height: 1.65; }
+  .benefit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); margin: var(--spacing-lg) 0; }
+  .benefit-card { padding: var(--spacing-lg); background-color: var(--color-surface-soft); }
+  .benefit-card h3 { font-size: 1.1rem; margin-bottom: 6px; }
+  .benefit-card p { font-size: 0.9rem; margin: 0; }
+  .article-cta { margin-top: var(--spacing-xxl); padding: var(--spacing-xl); text-align: center; }
+  @media (max-width: 640px) { .benefit-grid { grid-template-columns: 1fr; } }
+</style>
