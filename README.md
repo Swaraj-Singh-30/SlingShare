@@ -171,48 +171,88 @@ Each chunk carries an explicit 4-byte `chunkIndex`. If the connection momentaril
 - **Go** >= 1.22
 - **Node.js** >= 20.0
 
-### Quick Start
-Clone the repository and run:
+### Local Development
+
+#### Option A: Running with Hot Reload (Recommended)
+
+1. **Terminal 1: Start Astro Frontend**
+   ```bash
+   cd web
+   npm install
+   npm run dev
+   ```
+   *Frontend serves at `http://localhost:4321` with instant Vite hot module replacement.*
+
+2. **Terminal 2: Start Go Backend**
+   ```bash
+   go run ./cmd/server
+   ```
+   *Backend listens at `http://0.0.0.0:10000` exposing `/ws` and `/health`.*
+
+3. Open **`http://localhost:4321/app`** in your browser. The frontend automatically connects to `ws://localhost:10000/ws`.
+
+#### Option B: Unified Single-Binary Dev Server
 ```bash
-# Build frontend and start server in one command
 make dev
 ```
-Or run individual commands:
-```bash
-# 1. Build Astro static frontend
-cd web && npm install && npm run build && cd ..
-
-# 2. Build and start Go server
-go build -o ./bin/server ./cmd/server
-./bin/server
-```
-Visit **`http://localhost:8080`** in your browser.
+*Builds the Astro static frontend into `web/dist` and starts the Go server at `http://localhost:10000` serving both signaling and static files.*
 
 ---
 
 ## Production Deployment
 
-### 1. Build Single Executable
-```bash
-make build
+SlingShare uses a modern decoupled production architecture:
+- **Frontend**: Hosted on **Netlify** (Static SSG built with Astro).
+- **Backend**: Hosted on **Render** (Go WebSocket signaling & health service).
+
 ```
-The output `./bin/server` contains the Go HTTP and WebSocket signaling server, which automatically serves the pre-built Astro assets from `./web/dist`.
-
-### 2. Run as Systemd Service or Docker Container
-```bash
-PORT=8080 ./bin/server
+GitHub Repository
+   │
+   ├────────────────────────┐
+   │                        │
+   ▼                        ▼
+Netlify                   Render
+Astro Static              Go Backend
+https://slingshare.netlify.app   https://slingshare.onrender.com
+   │                        │
+   └────── WSS (/ws) ───────┘
 ```
 
-### 3. Environment Variables
+### 1. Backend Deployment (Render)
 
-| Variable | Description | Default |
+- **Repository**: Connect your GitHub repository to a new Render Web Service.
+- **Environment**: `Go`
+- **Build Command**: `go build -o ./bin/server ./cmd/server`
+- **Start Command**: `./bin/server`
+- **Health Check Path**: `/health`
+
+#### Render Environment Variables
+
+| Variable | Description | Example / Default |
 |---|---|---|
-| `PORT` | HTTP & WebSocket listen port | `8080` |
+| `PORT` | Listen port (assigned automatically by Render) | `10000` |
+| `ALLOWED_ORIGINS` | Comma-separated CORS/Origin whitelist | `https://slingshare.netlify.app,https://slingshare.io` |
 | `STUN_SERVERS` | Comma-separated list of STUN servers | `stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302` |
 | `TURN_SERVER` | Optional TURN relay URL | *(empty)* |
 | `TURN_USERNAME` | TURN authentication username | *(empty)* |
 | `TURN_CREDENTIAL` | TURN authentication password | *(empty)* |
-| `SITE_URL` | Canonical URL for SEO & sitemap | `https://slingshare.io` |
+
+### 2. Frontend Deployment (Netlify)
+
+- **Repository**: Connect your GitHub repository to Netlify.
+- **Base directory**: `web`
+- **Build command**: `npm run build`
+- **Publish directory**: `dist`
+*(These settings are pre-configured in the repository's `netlify.toml`)*
+
+#### Netlify Environment Variables
+
+| Variable | Description | Value |
+|---|---|---|
+| `PUBLIC_WS_URL` | Secure WebSocket signaling URL | `wss://slingshare.onrender.com/ws` |
+| `PUBLIC_GA_ID` | Google Analytics 4 Measurement ID *(optional)* | `G-XXXXXXXXXX` |
+
+> **Security Note**: Never place server secrets or private credentials in `PUBLIC_` variables. Astro variables prefixed with `PUBLIC_` are intentionally exposed to client-side bundles.
 
 ---
 

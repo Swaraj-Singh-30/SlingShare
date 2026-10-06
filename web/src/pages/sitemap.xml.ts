@@ -3,7 +3,6 @@ import { siteConfig } from '../config/site';
 
 const publicPages = [
   '',
-  '/app',
   '/how-to-send-files-between-phone-and-pc',
   '/how-to-transfer-files-from-iphone-to-windows',
   '/how-to-transfer-files-from-android-to-mac',

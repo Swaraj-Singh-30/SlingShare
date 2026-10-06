@@ -31,14 +31,32 @@ export class SignalingClient {
 
   constructor(events: SignalingEvents = {}, customWsUrl?: string) {
     this.events = events;
+
+    // 1. Explicit argument has highest priority
     if (customWsUrl) {
       this.url = customWsUrl;
-    } else if (typeof window !== 'undefined') {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.port === '4321' ? `${window.location.hostname}:8080` : window.location.host;
-      this.url = `${protocol}//${host}/ws`;
+      return;
+    }
+
+    // 2. Astro environment variable (PUBLIC_WS_URL)
+    const envWsUrl = import.meta.env?.PUBLIC_WS_URL;
+    if (envWsUrl && typeof envWsUrl === 'string' && envWsUrl.trim() !== '') {
+      this.url = envWsUrl.trim();
+      return;
+    }
+
+    // 3. Fallback based on browser location
+    if (typeof window !== 'undefined') {
+      const isHttps = window.location.protocol === 'https:';
+      const protocol = isHttps ? 'wss:' : 'ws:';
+      // When developing with Astro dev server on port 4321, connect to Go backend on port 10000
+      if (window.location.port === '4321') {
+        this.url = `${protocol}//${window.location.hostname}:10000/ws`;
+      } else {
+        this.url = `${protocol}//${window.location.host}/ws`;
+      }
     } else {
-      this.url = 'ws://localhost:8080/ws';
+      this.url = 'ws://localhost:10000/ws';
     }
   }
 

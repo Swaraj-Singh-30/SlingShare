@@ -43,13 +43,70 @@ type Server struct {
 	connLocks map[*websocket.Conn]*sync.Mutex // ensures thread-safe writes per connection
 }
 
+// IsOriginAllowed checks whether an HTTP or WebSocket origin is permitted.
+func IsOriginAllowed(origin string) bool {
+	if origin == "" {
+		return true // Allow same-origin or non-browser tools (e.g. native apps, curl)
+	}
+
+	allowedEnv := os.Getenv("ALLOWED_ORIGINS")
+	if allowedEnv != "" {
+		for _, o := range strings.Split(allowedEnv, ",") {
+			o = strings.TrimSpace(o)
+			if o == "*" || o == origin {
+				return true
+			}
+		}
+	}
+
+	// Default trusted origins for SlingShare production and local development
+	defaultOrigins := []string{
+		"http://localhost:4321",
+		"http://localhost:3000",
+		"http://localhost:8080",
+		"http://localhost:10000",
+		"http://127.0.0.1:4321",
+		"http://127.0.0.1:10000",
+		"https://slingshare.netlify.app",
+		"https://slingshare.onrender.com",
+		"https://slingshare.io",
+		"https://sling-share.com",
+	}
+
+	for _, o := range defaultOrigins {
+		if strings.EqualFold(origin, o) {
+			return true
+		}
+	}
+
+	// Netlify preview deployments (*.netlify.app)
+	if strings.HasPrefix(origin, "https://") && strings.HasSuffix(origin, ".netlify.app") {
+		return true
+	}
+
+	// Local private network origins for LAN testing (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+	if strings.HasPrefix(origin, "http://192.168.") ||
+		strings.HasPrefix(origin, "http://10.") ||
+		strings.HasPrefix(origin, "http://172.16.") ||
+		strings.HasPrefix(origin, "http://172.17.") ||
+		strings.HasPrefix(origin, "http://172.18.") ||
+		strings.HasPrefix(origin, "http://172.19.") ||
+		strings.HasPrefix(origin, "http://172.2") ||
+		strings.HasPrefix(origin, "http://172.30.") ||
+		strings.HasPrefix(origin, "http://172.31.") {
+		return true
+	}
+
+	return false
+}
+
 func NewServer() *Server {
 	s := &Server{
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  4096,
 			WriteBufferSize: 4096,
 			CheckOrigin: func(r *http.Request) bool {
-				return true // Allows pairing from different local hostnames / IPs
+				return IsOriginAllowed(r.Header.Get("Origin"))
 			},
 		},
 		manager:   session.NewManager(session.DefaultMaxPeersPerSession),

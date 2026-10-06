@@ -1,0 +1,21 @@
+# Netlify Configuration for SlingShare Frontend
+# https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  base = "web"
+  publish = "dist"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+  PUBLIC_WS_URL = "wss://slingshare.onrender.com/ws"
+
+# Production HTTP Security Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"

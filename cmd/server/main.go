@@ -14,14 +14,34 @@ import (
 	"github.com/Swaraj-Singh-30/SlingShare/internal/signaling"
 )
 
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if origin != "" && signaling.IsOriginAllowed(origin) {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			w.Header().Set("Access-Control-Max-Age", "86400")
+		}
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "10000"
 	}
-	if port[0] != ':' {
-		port = ":" + port
+	if port[0] == ':' {
+		port = port[1:]
 	}
+	addr := "0.0.0.0:" + port
 
 	mux := http.NewServeMux()
 	signalingServer := signaling.NewServer()
@@ -79,8 +99,8 @@ func main() {
 	})
 
 	server := &http.Server{
-		Addr:         port,
-		Handler:      mux,
+		Addr:         addr,
+		Handler:      corsMiddleware(mux),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
@@ -103,7 +123,7 @@ func main() {
 		close(idleConnsClosed)
 	}()
 
-	log.Printf("[server] SlingShare server listening at http://localhost%s (serving static from %s)", port, distDir)
+	log.Printf("[server] SlingShare server listening at http://%s (serving static from %s)", addr, distDir)
 
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatalf("[server] HTTP server ListenAndServe error: %v", err)

@@ -11,8 +11,8 @@ help:
 	@echo "  make clean    - Remove build artifacts and binaries"
 
 dev: build
-	@echo "==> Starting SlingShare server on http://localhost:8080..."
-	./bin/server
+	@echo "==> Starting SlingShare server on http://localhost:10000..."
+	PORT=10000 ./bin/server
 
 build:
 	@echo "==> Building web frontend (Astro)..."
