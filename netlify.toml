@@ -9,6 +9,7 @@
 [build.environment]
   NODE_VERSION = "22"
   PUBLIC_WS_URL = "wss://slingshare.onrender.com/ws"
+  PUBLIC_GA_ID = "G-P55FK5FYW8"
 
 # Production HTTP Security Headers
 [[headers]]

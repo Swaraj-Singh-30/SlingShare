@@ -25,6 +25,9 @@ const {
 } = Astro.props;
 
 const fullImageUrl = ogImage.startsWith('http') ? ogImage : `${siteConfig.siteUrl}${ogImage}`;
+
+const gaMeasurementId = import.meta.env.PUBLIC_GA_ID || 'G-P55FK5FYW8';
+const isProd = import.meta.env.PROD;
 ---
 
 <!doctype html>
@@ -95,15 +98,16 @@ const fullImageUrl = ogImage.startsWith('http') ? ogImage : `${siteConfig.siteUr
       />
     )}
 
-    <!-- Google Analytics 4 (Only loaded when PUBLIC_GA_ID is set in environment) -->
-    {import.meta.env.PUBLIC_GA_ID && (
+    <!-- Google tag (gtag.js) - Google Analytics 4 (Production only) -->
+    {isProd && gaMeasurementId && (
       <>
-        <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${import.meta.env.PUBLIC_GA_ID}`}></script>
-        <script is:inline define:vars={{ gaId: import.meta.env.PUBLIC_GA_ID }}>
+        <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}></script>
+        <script is:inline define:vars={{ gaMeasurementId }}>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', gaId, { anonymize_ip: true });
+
+          gtag('config', gaMeasurementId);
         </script>
       </>
     )}
