@@ -358,23 +358,74 @@ code, pre {
 .app-header-inner {
   width: 100%;
   max-width: 100%;
+  height: 100%;
   padding: 0 var(--spacing-lg);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
 }
 
-.app-header-left,
-.app-header-right {
+.app-header-left {
   display: flex;
   align-items: center;
+  justify-self: start;
   gap: var(--spacing-xs);
+  min-width: 0;
 }
 
 .app-header-center {
   display: flex;
   align-items: center;
   justify-content: center;
+  justify-self: center;
+}
+
+.app-header-right {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  justify-content: flex-end;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+
+/* Header View Mode Switcher Pill */
+.header-view-pill {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+  gap: 2px;
+  margin-left: 4px;
+}
+
+.header-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.header-view-btn:hover {
+  color: var(--color-ink);
+}
+
+.header-view-btn.active {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .app-brand-link {
@@ -742,5 +793,26 @@ code, pre {
   }
   .brand-name {
     font-size: 1.2rem;
+  }
+
+  .app-header-inner {
+    padding: 0 var(--spacing-sm);
+  }
+
+  .app-header-left,
+  .app-header-right {
+    gap: 2px;
+  }
+
+  .app-icon-btn {
+    padding: 6px;
+  }
+
+  .header-view-btn .view-btn-label {
+    display: none;
+  }
+
+  .header-view-btn {
+    padding: 5px 7px;
   }
 }

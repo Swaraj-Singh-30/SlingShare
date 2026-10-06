@@ -53,25 +53,21 @@ const appStructuredData = getSoftwareApplicationSchema();
               <circle cx="32" cy="38" r="2.5" fill="#ffffff" />
             </svg>
             <div class="beacon-halo"></div>
-            <span class="beacon-core-dot" id="radarSelfIcon" style="display: none;">💻</span>
+            <span class="beacon-core-dot" id="radarSelfIcon" style="display: none;"></span>
           </div>
           <div class="radar-transmitter-info">
             <div class="radar-self-identity">
               <span class="self-prefix">You are known as </span>
               <button id="editDeviceNameBtn" class="radar-self-name-btn" title="Click to rename device" aria-label="Edit device name">
                 <strong id="localDeviceName">Detecting...</strong>
-                <span class="edit-pencil-icon" aria-hidden="true">✎</span>
+                <span class="edit-pencil-icon" aria-hidden="true">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                  </svg>
+                </span>
               </button>
             </div>
             <p class="radar-self-subtitle">You can be discovered by everyone on this network</p>
-          </div>
-        </div>
-
-        <!-- Radar Bottom Controls: Minimal Accessible List Fallback Pill -->
-        <div class="radar-bottom-bar">
-          <div class="radar-view-controls">
-            <button id="viewRadarBtn" class="view-toggle-btn active" title="Switch to Radar view" aria-label="Radar view">◉ Radar</button>
-            <button id="viewListBtn" class="view-toggle-btn" title="Switch to List view" aria-label="List view">☰ List</button>
           </div>
         </div>
       </div>
@@ -79,8 +75,10 @@ const appStructuredData = getSoftwareApplicationSchema();
       <!-- Accessible List View Fallback (When List view toggled) -->
       <div class="discovery-list-container" id="discoveryListContainer" style="display: none;">
         <div class="discovery-list-header">
-          <h3>Nearby Discovered Devices</h3>
-          <p>Select any available peer to connect and share files:</p>
+          <div class="discovery-list-titles">
+            <h3>Nearby Discovered Devices</h3>
+            <p>Select any available peer to connect and share files:</p>
+          </div>
         </div>
         <div class="discovered-items-list" id="discoveredItemsList">
           <div class="empty-list-state" id="emptyListState">
@@ -98,10 +96,18 @@ const appStructuredData = getSoftwareApplicationSchema();
         <div class="sharing-card-header">
           <div style="display: flex; gap: 8px; align-items: center;">
             <button id="backToRadarBtn" class="btn btn-secondary btn-sm back-to-radar-btn" title="Choose another device">
-              <span aria-hidden="true">←</span> Choose another device
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              <span>Choose another device</span>
             </button>
             <button id="retryConnectionBtn" class="btn btn-secondary btn-sm" title="Retry connection" style="display: none;">
-              ↻ Retry
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+              <span>Retry</span>
             </button>
           </div>
           <div class="connection-pill" id="connectionPill">
@@ -113,7 +119,7 @@ const appStructuredData = getSoftwareApplicationSchema();
 
         <!-- Target Device Info Banner -->
         <div class="selected-target-banner">
-          <div class="selected-target-avatar" id="selectedTargetIcon">📱</div>
+          <div class="selected-target-avatar" id="selectedTargetIcon"></div>
           <div class="selected-target-text">
             <span class="selected-target-prefix">Sending to</span>
             <h3 class="selected-target-name" id="remotePeerName">Target Device</h3>
@@ -124,10 +130,17 @@ const appStructuredData = getSoftwareApplicationSchema();
         <!-- Sharing Mode Selector: [ File ] [ Text ] -->
         <div class="sharing-mode-selector" role="tablist">
           <button class="mode-tab active" id="tabFilesBtn" role="tab" aria-selected="true" aria-controls="panelFiles">
-            📁 File
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+              <polyline points="13 2 13 9 20 9"></polyline>
+            </svg>
+            <span>Files</span>
           </button>
           <button class="mode-tab" id="tabTextBtn" role="tab" aria-selected="false" aria-controls="panelText">
-            💬 Text
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span>Text</span>
           </button>
         </div>
 
@@ -136,7 +149,13 @@ const appStructuredData = getSoftwareApplicationSchema();
           <div class="drop-zone disabled" id="dropZone" tabindex="0" role="button" aria-label="Drop files here or click to select files">
             <input type="file" id="fileInput" multiple style="display: none;" />
             <div class="drop-zone-content">
-              <div class="drop-icon" id="dropZoneIcon">⏳</div>
+              <div class="drop-icon" id="dropZoneIcon">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
               <h4 id="dropZoneTitle">Connecting...</h4>
               <p id="dropZoneSubtitle">File transfer will enable automatically once connected</p>
               <span class="drop-zone-hint" id="dropZoneHint">Direct WebRTC DataChannel streaming</span>
@@ -159,7 +178,11 @@ const appStructuredData = getSoftwareApplicationSchema();
             <div class="text-composer-top">
               <label for="textShareInput" class="composer-label">Send text</label>
               <button id="pasteClipboardBtn" class="btn btn-secondary btn-sm" title="Paste from clipboard">
-                📋 Paste
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+                <span>Paste</span>
               </button>
             </div>
             <textarea
@@ -196,7 +219,7 @@ const appStructuredData = getSoftwareApplicationSchema();
     <!-- Connected Peer Floating Banner (Preserved for status indicators) -->
     <div id="peerBanner" class="peer-banner card" style="display: none;">
       <div class="peer-info-content">
-        <div class="peer-icon" id="remotePeerIcon">📱</div>
+        <div class="peer-icon" id="remotePeerIcon"></div>
         <div class="peer-text">
           <div class="peer-title">Connected with <strong id="bannerRemotePeerName">Remote Device</strong></div>
           <div class="peer-subtitle" id="bannerRemotePeerSubtitle">Direct WebRTC DataChannel active • End-to-end encrypted</div>
@@ -213,7 +236,7 @@ const appStructuredData = getSoftwareApplicationSchema();
     <!-- Hidden state elements for testing & status preservation -->
     <div class="system-status-hidden" style="display: none;">
       <span class="badge badge-card" id="transfersCount">0 active</span>
-      <span id="localDeviceIcon">💻</span>
+      <span id="localDeviceIcon"></span>
     </div>
 
     <!-- Manual Room & QR Pairing Dialog (Accessible via header pair button) -->
@@ -221,45 +244,60 @@ const appStructuredData = getSoftwareApplicationSchema();
       <div class="modal-content card">
         <div class="modal-header">
           <h3>Pair via Room Code or QR</h3>
-          <button id="closeSessionModalBtn" class="btn-icon-close" aria-label="Close dialog">✕</button>
+          <button id="closeSessionModalBtn" class="btn-icon-close" aria-label="Close dialog">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
         <div class="modal-body">
           <div class="session-entry-group" id="sessionEntryGroup">
-            <p style="font-size: 0.9rem; margin-bottom: 12px; color: var(--color-muted);">
-              Create a private 6-character room code or enter an existing code:
+            <p class="session-entry-desc">
+              Create a private temporary room or enter an existing code:
             </p>
-            <button id="createSessionBtn" class="btn btn-primary btn-sm" style="width: 100%; margin-bottom: 12px;">Create New Room</button>
-            <div class="join-inline-group" style="display: flex; gap: 8px;">
+            <button id="createSessionBtn" class="btn btn-primary room-primary-btn">Create New Room</button>
+            <div class="room-entry-divider">
+              <span>or enter code</span>
+            </div>
+            <div class="join-inline-group">
               <input
                 type="text"
                 id="joinCodeInput"
-                class="input input-sm join-input"
-                placeholder="6-char code"
+                class="input join-input"
+                placeholder="6-character code"
                 maxlength="6"
                 aria-label="Enter 6-character room code"
-                style="flex: 1;"
               />
-              <button id="joinSessionBtn" class="btn btn-secondary btn-sm">Join Room</button>
+              <button id="joinSessionBtn" class="btn btn-secondary room-join-btn">Join</button>
             </div>
           </div>
 
           <div class="session-active-group" id="sessionActiveGroup" style="display: none;">
-            <div class="session-code-display" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-              <span class="session-code-label">Room Code:</span>
-              <code class="session-code-value" id="activeSessionCode" style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary);">------</code>
-              <button id="copyCodeBtn" class="btn btn-secondary btn-sm" title="Copy Room Code">Copy</button>
-              <button id="showQrBtn" class="btn btn-secondary btn-sm" title="Show QR Code">QR</button>
-            </div>
-            <div style="display: flex; justify-content: flex-end;">
-              <button id="modalLeaveSessionBtn" class="btn btn-secondary btn-sm btn-danger-hover">Leave Session</button>
+            <div class="active-room-card">
+              <div class="active-room-info">
+                <span class="active-room-label">Active Room Code</span>
+                <code class="active-room-code" id="activeSessionCode">------</code>
+              </div>
+              <div class="active-room-actions">
+                <button id="copyCodeBtn" class="btn btn-secondary btn-sm" title="Copy Room Code">Copy</button>
+                <button id="showQrBtn" class="btn btn-secondary btn-sm" title="Show QR Code">QR</button>
+                <button id="modalLeaveSessionBtn" class="btn btn-secondary btn-sm btn-danger-hover">Leave</button>
+              </div>
             </div>
           </div>
 
           <!-- Waiting Prompt (For manually joined rooms) -->
           <div class="waiting-prompt card" id="waitingPrompt" style="display: none; margin-top: 16px;">
-            <div class="waiting-icon">⏳</div>
+            <div class="waiting-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="6"></circle>
+                <circle cx="12" cy="12" r="2"></circle>
+              </svg>
+            </div>
             <h4>Waiting for peer to join</h4>
-            <p style="font-size: 0.85rem; color: var(--color-muted); margin-bottom: 8px;">
+            <p class="waiting-desc">
               Enter room code <strong id="waitingPromptCode">------</strong> on your second device or scan the QR code.
             </p>
             <button id="waitingPromptQrBtn" class="btn btn-secondary btn-sm">View Pairing QR Code</button>
@@ -273,7 +311,12 @@ const appStructuredData = getSoftwareApplicationSchema();
       <div class="modal-content card">
         <div class="modal-header">
           <h3>Pair Device</h3>
-          <button id="closeQrModalBtn" class="btn-icon-close" aria-label="Close dialog">✕</button>
+          <button id="closeQrModalBtn" class="btn-icon-close" aria-label="Close dialog">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
         <div class="modal-body">
           <p class="modal-desc">Scan with your phone or tablet camera to join this session directly:</p>
@@ -293,7 +336,12 @@ const appStructuredData = getSoftwareApplicationSchema();
       <div class="modal-content card">
         <div class="modal-header">
           <h3>Edit Device Name</h3>
-          <button id="closeEditNameModalBtn" class="btn-icon-close" aria-label="Close dialog">✕</button>
+          <button id="closeEditNameModalBtn" class="btn-icon-close" aria-label="Close dialog">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
         <div class="modal-body">
           <div style="margin-bottom: 16px;">
@@ -314,7 +362,12 @@ const appStructuredData = getSoftwareApplicationSchema();
       <div class="modal-content card">
         <div class="modal-header">
           <h3>About SlingShare</h3>
-          <button id="closeInfoModalBtn" class="btn-icon-close" aria-label="Close dialog">✕</button>
+          <button id="closeInfoModalBtn" class="btn-icon-close" aria-label="Close dialog">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
         <div class="modal-body">
           <p style="margin-bottom: 12px; font-size: 0.95rem;">
@@ -415,8 +468,8 @@ const appStructuredData = getSoftwareApplicationSchema();
     const radarNodesLayer = document.getElementById('radarNodesLayer')!;
     const discoveryListContainer = document.getElementById('discoveryListContainer')!;
     const discoveredItemsList = document.getElementById('discoveredItemsList')!;
-    const viewRadarBtn = document.getElementById('viewRadarBtn')!;
-    const viewListBtn = document.getElementById('viewListBtn')!;
+    const headerViewRadarBtn = document.getElementById('headerViewRadarBtn');
+    const headerViewListBtn = document.getElementById('headerViewListBtn');
 
     // Selected Device Sharing Card Elements
     const selectedSharingOverlay = document.getElementById('selectedSharingOverlay')!;
@@ -477,17 +530,7 @@ const appStructuredData = getSoftwareApplicationSchema();
     }
 
     function getDeviceIcon(type: string): string {
-      switch (type) {
-        case 'phone':
-          return '📱';
-        case 'tablet':
-          return '📟';
-        case 'laptop':
-          return '💻';
-        case 'desktop':
-        default:
-          return '🖥️';
-      }
+      return getDeviceIconSvg(type);
     }
 
     function getDeviceIconSvg(type: string): string {
@@ -903,22 +946,26 @@ const appStructuredData = getSoftwareApplicationSchema();
       });
     }
 
-    // View toggle handlers
-    viewRadarBtn.addEventListener('click', () => {
-      currentViewMode = 'radar';
-      viewRadarBtn.classList.add('active');
-      viewListBtn.classList.remove('active');
-      radarViewport.style.display = 'flex';
-      discoveryListContainer.style.display = 'none';
-    });
+    // Centralized View Mode Switcher (Radar <-> List) via Header Controls
+    function switchView(mode: 'radar' | 'list') {
+      currentViewMode = mode;
+      const isRadar = mode === 'radar';
 
-    viewListBtn.addEventListener('click', () => {
-      currentViewMode = 'list';
-      viewListBtn.classList.add('active');
-      viewRadarBtn.classList.remove('active');
-      radarViewport.style.display = 'none';
-      discoveryListContainer.style.display = 'block';
-    });
+      radarViewport.style.display = isRadar ? 'flex' : 'none';
+      discoveryListContainer.style.display = isRadar ? 'none' : 'block';
+
+      if (headerViewRadarBtn) headerViewRadarBtn.classList.toggle('active', isRadar);
+      if (headerViewListBtn) headerViewListBtn.classList.toggle('active', !isRadar);
+
+      if (isRadar) {
+        renderRadarNodes();
+      } else {
+        renderDiscoveryList();
+      }
+    }
+
+    headerViewRadarBtn?.addEventListener('click', () => switchView('radar'));
+    headerViewListBtn?.addEventListener('click', () => switchView('list'));
 
     function updateConnectionStateUI(state: 'connected' | 'connecting' | 'disconnected', type: string = 'direct') {
       const isConn = state === 'connected';
@@ -937,7 +984,9 @@ const appStructuredData = getSoftwareApplicationSchema();
         if (dropZoneTitleEl) dropZoneTitleEl.textContent = 'Send file';
         if (dropZoneSubtitleEl) dropZoneSubtitleEl.textContent = 'Drag & drop or click to choose file';
         if (dropZoneHintEl) dropZoneHintEl.textContent = 'Direct WebRTC DataChannel streaming';
-        if (dropZoneIconEl) dropZoneIconEl.textContent = '📤';
+        if (dropZoneIconEl) {
+          dropZoneIconEl.innerHTML = `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>`;
+        }
         if (retryConnectionBtn) retryConnectionBtn.style.display = 'none';
       } else if (state === 'connecting') {
         statusDotEl.className = 'status-indicator connecting';
@@ -950,7 +999,9 @@ const appStructuredData = getSoftwareApplicationSchema();
         if (dropZoneTitleEl) dropZoneTitleEl.textContent = `Connecting to ${targetName}...`;
         if (dropZoneSubtitleEl) dropZoneSubtitleEl.textContent = 'File transfer will enable automatically once connected';
         if (dropZoneHintEl) dropZoneHintEl.textContent = 'Negotiating WebRTC peer connection...';
-        if (dropZoneIconEl) dropZoneIconEl.textContent = '⏳';
+        if (dropZoneIconEl) {
+          dropZoneIconEl.innerHTML = `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
+        }
         if (retryConnectionBtn) retryConnectionBtn.style.display = 'none';
       } else {
         statusDotEl.className = 'status-indicator disconnected';
@@ -963,7 +1014,9 @@ const appStructuredData = getSoftwareApplicationSchema();
         if (dropZoneTitleEl) dropZoneTitleEl.textContent = selectedDevice ? `Couldn't connect to ${targetName}` : 'Device disconnected';
         if (dropZoneSubtitleEl) dropZoneSubtitleEl.textContent = 'Click "Retry" or choose another device';
         if (dropZoneHintEl) dropZoneHintEl.textContent = 'WebRTC DataChannel closed';
-        if (dropZoneIconEl) dropZoneIconEl.textContent = '⚠️';
+        if (dropZoneIconEl) {
+          dropZoneIconEl.innerHTML = `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+        }
         if (retryConnectionBtn && selectedDevice) retryConnectionBtn.style.display = 'inline-flex';
       }
     }
@@ -986,6 +1039,11 @@ const appStructuredData = getSoftwareApplicationSchema();
             console.log('[app] Direct WebRTC data channel opened');
             showToast('Direct WebRTC connection established');
             updateConnectionStateUI('connected', 'direct');
+            selectedSharingOverlay.style.display = 'flex';
+            if (connectedPeer) {
+              remotePeerNameEl.textContent = connectedPeer.deviceName;
+              selectedTargetIconEl.innerHTML = getDeviceIconSvg(connectedPeer.deviceType);
+            }
             transferMgr.resumeInterruptedReceives();
 
             // Auto-send any pending files if the user queued them while connecting!
@@ -1187,7 +1245,7 @@ const appStructuredData = getSoftwareApplicationSchema();
       if (peer) {
         remotePeerNameEl.textContent = peer.deviceName;
         if (bannerRemotePeerName) bannerRemotePeerName.textContent = peer.deviceName;
-        remotePeerIconEl.textContent = getDeviceIcon(peer.deviceType);
+        remotePeerIconEl.innerHTML = getDeviceIconSvg(peer.deviceType);
         selectedTargetIconEl.innerHTML = getDeviceIconSvg(peer.deviceType);
         waitingPrompt.style.display = 'none';
         updateConnectionStateUI('connecting', 'direct');
@@ -1384,7 +1442,7 @@ const appStructuredData = getSoftwareApplicationSchema();
         const iconWrap = document.createElement('div');
         iconWrap.className = 'received-icon-wrapper error';
         iconWrap.setAttribute('aria-hidden', 'true');
-        iconWrap.textContent = '⚠️';
+        iconWrap.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
 
         const details = document.createElement('div');
         details.className = 'received-details';
@@ -1433,7 +1491,12 @@ const appStructuredData = getSoftwareApplicationSchema();
               <span class="transfer-file-name" title="${escapeHtml(state.fileName)}">${escapeHtml(state.fileName)}</span>
               <span class="transfer-status-text">${statusLabel}</span>
             </div>
-            <button class="btn-cancel-transfer" data-id="${state.id}" aria-label="Cancel transfer" title="Cancel">✕</button>
+            <button class="btn-cancel-transfer" data-id="${state.id}" aria-label="Cancel transfer" title="Cancel">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           </div>
           <div class="progress-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
             <div class="progress-fill" style="width: ${pct}%"></div>
@@ -2104,64 +2167,28 @@ const appStructuredData = getSoftwareApplicationSchema();
   }
 
   /* ---------------------------------------------------------
-     Radar Bottom Controls
-     --------------------------------------------------------- */
-  .radar-bottom-bar {
-    position: absolute;
-    bottom: 16px;
-    right: 20px;
-    display: flex;
-    align-items: center;
-    z-index: 25;
-  }
-
-  .radar-view-controls {
-    display: flex;
-    background: var(--color-canvas);
-    border: 1px solid var(--color-hairline);
-    border-radius: var(--radius-pill);
-    padding: 3px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-  }
-
-  .view-toggle-btn {
-    background: transparent;
-    border: none;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--color-muted);
-    padding: 5px 12px;
-    border-radius: var(--radius-pill);
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-
-  .view-toggle-btn.active {
-    background: var(--color-primary);
-    color: #fff;
-  }
-
-  /* ---------------------------------------------------------
      Accessible List Fallback View
      --------------------------------------------------------- */
   .discovery-list-container {
     width: 100%;
     max-width: 680px;
-    margin: var(--spacing-xl) auto;
-    padding: 0 var(--spacing-lg);
+    margin: 28px auto;
+    padding: 0 var(--spacing-lg) var(--spacing-xxl);
     z-index: 10;
   }
 
   .discovery-list-header {
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
   }
 
-  .discovery-list-header h3 {
-    font-size: 1.3rem;
+  .discovery-list-titles h3 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--color-ink);
     margin-bottom: 4px;
   }
 
-  .discovery-list-header p {
+  .discovery-list-titles p {
     font-size: 0.9rem;
     color: var(--color-muted);
   }
@@ -2765,11 +2792,169 @@ const appStructuredData = getSoftwareApplicationSchema();
   }
 
   .btn-icon-close {
-    background: none;
+    background: transparent;
     border: none;
-    font-size: 1.1rem;
     color: var(--color-muted);
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.15s ease, color 0.15s ease;
+    outline: none;
+  }
+
+  .btn-icon-close:hover {
+    background: var(--color-surface);
+    color: var(--color-ink);
+  }
+
+  /* Room / Session Dialog Styling */
+  .session-entry-desc {
+    font-size: 0.875rem;
+    color: var(--color-muted);
+    margin-bottom: var(--spacing-md);
+    line-height: 1.4;
+  }
+
+  .room-primary-btn {
+    width: 100%;
+    height: 42px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .room-entry-divider {
+    display: flex;
+    align-items: center;
+    margin: var(--spacing-md) 0;
+    text-align: center;
+    color: var(--color-muted-soft);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .room-entry-divider::before,
+  .room-entry-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--color-hairline);
+  }
+
+  .room-entry-divider span {
+    padding: 0 var(--spacing-sm);
+  }
+
+  .join-inline-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .join-input {
+    flex: 1;
+    height: 40px;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+    letter-spacing: 0.1em;
+    font-size: 0.95rem;
+    padding: 0 12px;
+  }
+
+  .room-join-btn {
+    height: 40px;
+    padding: 0 16px;
+    white-space: nowrap;
+  }
+
+  /* Active Room Card */
+  .active-room-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .active-room-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .active-room-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .active-room-code {
+    font-family: var(--font-mono);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .active-room-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .active-room-actions .btn {
+    height: 34px;
+    padding: 0 12px;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+
+  .waiting-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--spacing-lg);
+    gap: 8px;
+  }
+
+  .waiting-icon {
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .waiting-desc {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    margin-bottom: 8px;
+  }
+
+  @media (max-width: 440px) {
+    .active-room-card {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+    .active-room-actions {
+      justify-content: flex-end;
+    }
   }
 
   .modal-desc {

@@ -125,12 +125,12 @@ async function runE2ETest() {
 
     // Test List View Fallback on Device A
     console.log('[List Fallback] Switching Device A to List view...');
-    await pageA.click('#viewListBtn');
+    await pageA.click('#headerViewListBtn');
     await pageA.waitForSelector('.discovered-list-item:has-text("Pixel Phone")', { timeout: 4000 });
     console.log('✓ Discovered device accurately listed in accessible List view fallback!');
 
     // Switch back to Radar
-    await pageA.click('#viewRadarBtn');
+    await pageA.click('#headerViewRadarBtn');
     await pageA.waitForSelector('.radar-device-node:has-text("Pixel Phone")', { timeout: 4000 });
 
     // -------------------------------------------------------------

@@ -140,11 +140,33 @@ const fullImageUrl = ogImage.startsWith('http') ? ogImage : `${siteConfig.siteUr
               </svg>
             </button>
             <div id="appMenuDropdown" class="app-menu-dropdown card" style="display: none;">
-              <a href="/" class="app-menu-item">🏠 Home</a>
-              <a href="/docs/how-it-works" class="app-menu-item">📖 How It Works</a>
-              <a href="/p2p-file-sharing" class="app-menu-item">⚡ Direct P2P Sharing</a>
-              <a href="/airdrop-alternative" class="app-menu-item">📱 AirDrop Alternative</a>
-              <a href="/security" class="app-menu-item">🔒 Security & Privacy</a>
+              <a href="/" class="app-menu-item">Home</a>
+              <a href="/docs/how-it-works" class="app-menu-item">How It Works</a>
+              <a href="/p2p-file-sharing" class="app-menu-item">Direct P2P Sharing</a>
+              <a href="/airdrop-alternative" class="app-menu-item">AirDrop Alternative</a>
+              <a href="/security" class="app-menu-item">Security & Privacy</a>
+            </div>
+
+            <div class="header-view-pill" role="group" aria-label="View Mode">
+              <button id="headerViewRadarBtn" class="header-view-btn active" title="Switch to Radar view" aria-label="Radar view">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="6"></circle>
+                  <circle cx="12" cy="12" r="2"></circle>
+                </svg>
+                <span class="view-btn-label">Radar</span>
+              </button>
+              <button id="headerViewListBtn" class="header-view-btn" title="Switch to List view" aria-label="List view">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="8" y1="6" x2="21" y2="6"></line>
+                  <line x1="8" y1="12" x2="21" y2="12"></line>
+                  <line x1="8" y1="18" x2="21" y2="18"></line>
+                  <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                  <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                  <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                <span class="view-btn-label">List</span>
+              </button>
             </div>
           </div>
 
@@ -185,7 +207,9 @@ const fullImageUrl = ogImage.startsWith('http') ? ogImage : `${siteConfig.siteUr
               </svg>
             </button>
             <button id="themeToggleBtn" class="theme-toggle-btn app-icon-btn" aria-label="Toggle theme mode" title="Toggle theme (System / Light / Dark)">
-              <span id="themeIcon">🌓</span>
+              <span id="themeIcon" style="display: flex; align-items: center; justify-content: center;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor"></path></svg>
+              </span>
             </button>
           </div>
         </div>
@@ -268,11 +292,11 @@ const fullImageUrl = ogImage.startsWith('http') ? ogImage : `${siteConfig.siteUr
         function updateIcon(mode) {
           if (!themeIcon) return;
           if (mode === 'dark') {
-            themeIcon.textContent = '🌙';
+            themeIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
           } else if (mode === 'light') {
-            themeIcon.textContent = '☀️';
+            themeIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
           } else {
-            themeIcon.textContent = '🌓';
+            themeIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor"></path></svg>`;
           }
         }
 

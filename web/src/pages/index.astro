@@ -53,7 +53,12 @@ const structuredData = [getOrganizationSchema(), getSoftwareApplicationSchema()]
           </div>
           <div class="pairing-demo-preview">
             <div class="demo-chip">
-              <span class="demo-icon">💻</span>
+              <span class="demo-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="2" y1="20" x2="22" y2="20"></line>
+                </svg>
+              </span>
               <div class="demo-label">MacBook Pro</div>
             </div>
             <div class="demo-beam">
@@ -61,7 +66,12 @@ const structuredData = [getOrganizationSchema(), getSoftwareApplicationSchema()]
               <span class="beam-text">Direct WebRTC</span>
             </div>
             <div class="demo-chip">
-              <span class="demo-icon">📱</span>
+              <span class="demo-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+              </span>
               <div class="demo-label">iPhone 15</div>
             </div>
           </div>
@@ -127,7 +137,12 @@ const structuredData = [getOrganizationSchema(), getSoftwareApplicationSchema()]
 
       <div class="pillars-grid">
         <div class="pillar-card card">
-          <div class="pillar-icon">🔒</div>
+          <div class="pillar-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
           <h3>End-to-End Encryption</h3>
           <p>
             All file chunks and text payloads travel through WebRTC DataChannels secured with DTLS (Datagram Transport Layer Security). Even the signaling server cannot see the payload.
@@ -136,7 +151,11 @@ const structuredData = [getOrganizationSchema(), getSoftwareApplicationSchema()]
         </div>
 
         <div class="pillar-card card">
-          <div class="pillar-icon">⚡</div>
+          <div class="pillar-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </div>
           <h3>Chunked Streaming & Backpressure</h3>
           <p>
             Files of any size are streamed in 64 KB slices with adaptive backpressure management to prevent memory bloat and keep your browser responsive.
@@ -145,7 +164,11 @@ const structuredData = [getOrganizationSchema(), getSoftwareApplicationSchema()]
         </div>
 
         <div class="pillar-card card">
-          <div class="pillar-icon">🛡️</div>
+          <div class="pillar-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
           <h3>Cryptographic Verification</h3>
           <p>
             Every transfer includes client-side SHA-256 checksum calculation. The receiving device independently validates file integrity before completing the transfer.
