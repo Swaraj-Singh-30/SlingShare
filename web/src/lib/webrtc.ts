@@ -1,4 +1,4 @@
-import type { IceServerConfig, ConnectionState, ConnectionType, DataChannelMessage } from './types';
+import type { IceServerConfig, ConnectionState, ConnectionType, DataChannelMessage, TextTransferPayload } from './types';
 import { BUFFER_LOW_THRESHOLD } from './chunker';
 
 export interface WebRTCEvents {
@@ -86,11 +86,19 @@ export class WebRTCManager {
     this.dataChannel.binaryType = 'arraybuffer';
     this.dataChannel.bufferedAmountLowThreshold = BUFFER_LOW_THRESHOLD;
 
-    this.dataChannel.onopen = () => {
-      console.log('[webrtc] DataChannel is open and ready');
+    const notifyOpen = () => {
+      console.log('[webrtc] DataChannel is open and ready (readyState: open)');
       this.events.onDataChannelStateChange?.(true);
       this.checkConnectionType();
     };
+
+    this.dataChannel.onopen = notifyOpen;
+    this.dataChannel.addEventListener('open', notifyOpen);
+
+    // If channel is already open when passed into setupDataChannel
+    if (this.dataChannel.readyState === 'open') {
+      notifyOpen();
+    }
 
     this.dataChannel.onclose = () => {
       console.log('[webrtc] DataChannel closed');
@@ -107,10 +115,21 @@ export class WebRTCManager {
           const parsed = JSON.parse(event.data);
           this.events.onMessageReceived?.(parsed);
         } catch (e) {
-          console.warn('[webrtc] Received non-JSON text message:', event.data);
+          console.warn('[webrtc] Non-JSON text message, passing as raw text:', event.data);
+          this.events.onMessageReceived?.({
+            type: 'text',
+            id: 'raw_' + Date.now(),
+            text: event.data,
+            timestamp: Date.now(),
+            senderName: '',
+          });
         }
       } else if (event.data instanceof ArrayBuffer) {
         this.events.onBinaryChunkReceived?.(event.data);
+      } else if (typeof Blob !== 'undefined' && event.data instanceof Blob) {
+        event.data.arrayBuffer().then((buf) => {
+          this.events.onBinaryChunkReceived?.(buf);
+        });
       }
     };
   }
@@ -254,6 +273,21 @@ export class WebRTCManager {
 
   public isChannelOpen(): boolean {
     return this.dataChannel !== null && this.dataChannel.readyState === 'open';
+  }
+
+  public isConnected(): boolean {
+    return this.isChannelOpen();
+  }
+
+  public sendTextMessage(text: string, senderName: string = ''): boolean {
+    const payload: TextTransferPayload = {
+      type: 'text',
+      id: 'txt_' + Math.random().toString(36).substring(2, 9),
+      text,
+      timestamp: Date.now(),
+      senderName,
+    };
+    return this.sendJson(payload);
   }
 
   public sendJson(msg: DataChannelMessage): boolean {

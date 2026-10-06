@@ -1,0 +1,13 @@
+{
+  "name": "slingshare-monorepo",
+  "version": "1.0.0",
+  "description": "SlingShare - Fast, private peer-to-peer file and text sharing",
+  "scripts": {
+    "dev": "cd web && npm run dev -- --host",
+    "build": "cd web && npm run build && go build -o ../bin/server ./cmd/server",
+    "start": "./bin/server",
+    "server": "go run ./cmd/server",
+    "test": "go test -v ./... && cd web && npm test"
+  },
+  "private": true
+}

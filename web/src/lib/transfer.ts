@@ -285,6 +285,8 @@ export class TransferManager {
     // Create Blob and Download URL
     try {
       const blob = new Blob(validChunks as BlobPart[], { type: state.mimeType });
+      // Free raw chunks array to reduce memory
+      recv.chunks = [];
       const downloadUrl = URL.createObjectURL(blob);
       state.blob = blob;
       state.downloadUrl = downloadUrl;

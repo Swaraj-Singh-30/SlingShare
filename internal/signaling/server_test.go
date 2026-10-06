@@ -122,3 +122,120 @@ func TestSignalingWebSocketFlow(t *testing.T) {
 		t.Fatalf("unexpected peer-left message: %+v", peerLeftMsg)
 	}
 }
+
+func TestDeviceDiscoveryAndPairing(t *testing.T) {
+	srv := NewServer()
+	mux := http.NewServeMux()
+	mux.HandleFunc("/ws", srv.HandleWebSocket)
+
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	dialer := websocket.DefaultDialer
+
+	// 1. Device A connects and registers presence
+	connA, _, err := dialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("failed to dial Device A: %v", err)
+	}
+	defer connA.Close()
+
+	regA := Message{
+		Type:       "register-presence",
+		DeviceID:   "dev_macbook_01",
+		DeviceName: "Swaraj's MacBook",
+		DeviceType: "laptop",
+	}
+	if err := connA.WriteJSON(regA); err != nil {
+		t.Fatalf("failed to register presence for Device A: %v", err)
+	}
+
+	var presListA Message
+	if err := connA.ReadJSON(&presListA); err != nil {
+		t.Fatalf("failed to read presence-list for Device A: %v", err)
+	}
+	if presListA.Type != "presence-list" {
+		t.Fatalf("expected presence-list, got: %s", presListA.Type)
+	}
+	if len(presListA.Devices) != 0 {
+		t.Fatalf("expected empty presence list for first device, got %d devices", len(presListA.Devices))
+	}
+
+	// 2. Device B connects and registers presence
+	connB, _, err := dialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("failed to dial Device B: %v", err)
+	}
+	defer connB.Close()
+
+	regB := Message{
+		Type:       "register-presence",
+		DeviceID:   "dev_pixel_02",
+		DeviceName: "Pixel Phone",
+		DeviceType: "phone",
+	}
+	if err := connB.WriteJSON(regB); err != nil {
+		t.Fatalf("failed to register presence for Device B: %v", err)
+	}
+
+	// Device B receives presence list (should contain Device A)
+	var presListB Message
+	if err := connB.ReadJSON(&presListB); err != nil {
+		t.Fatalf("failed to read presence-list for Device B: %v", err)
+	}
+	if len(presListB.Devices) != 1 || presListB.Devices[0].DeviceID != "dev_macbook_01" {
+		t.Fatalf("expected Device B to see Device A in presence list, got: %+v", presListB.Devices)
+	}
+
+	// Device A receives device-joined broadcast for Device B
+	var devJoinedA Message
+	if err := connA.ReadJSON(&devJoinedA); err != nil {
+		t.Fatalf("failed to read device-joined on Device A: %v", err)
+	}
+	if devJoinedA.Type != "device-joined" || devJoinedA.Device == nil || devJoinedA.Device.DeviceID != "dev_pixel_02" {
+		t.Fatalf("unexpected device-joined message on Device A: %+v", devJoinedA)
+	}
+
+	// 3. Device A requests pairing with Device B via Radar
+	pairReq := Message{
+		Type:           "request-pairing",
+		TargetDeviceID: "dev_pixel_02",
+		DeviceName:     "Swaraj's MacBook",
+		DeviceType:     "laptop",
+	}
+	if err := connA.WriteJSON(pairReq); err != nil {
+		t.Fatalf("failed to send pairing request: %v", err)
+	}
+
+	// Device A receives pairing-initiated with session code
+	var pairInitA Message
+	if err := connA.ReadJSON(&pairInitA); err != nil {
+		t.Fatalf("failed to read pairing-initiated on Device A: %v", err)
+	}
+	if pairInitA.Type != "pairing-initiated" || pairInitA.SessionID == "" {
+		t.Fatalf("invalid pairing-initiated message: %+v", pairInitA)
+	}
+	assignedSessionID := pairInitA.SessionID
+
+	// Device B receives pairing-invitation with the same session code
+	var pairInviteB Message
+	if err := connB.ReadJSON(&pairInviteB); err != nil {
+		t.Fatalf("failed to read pairing-invitation on Device B: %v", err)
+	}
+	if pairInviteB.Type != "pairing-invitation" || pairInviteB.SessionID != assignedSessionID {
+		t.Fatalf("invalid pairing-invitation on Device B: %+v", pairInviteB)
+	}
+
+	// 4. Device B disconnects -> Device A receives device-left
+	connB.Close()
+
+	_ = connA.SetReadDeadline(time.Now().Add(2 * time.Second))
+	var devLeftA Message
+	if err := connA.ReadJSON(&devLeftA); err != nil {
+		t.Fatalf("failed to read device-left on Device A: %v", err)
+	}
+	if devLeftA.Type != "device-left" || devLeftA.DeviceID != "dev_pixel_02" {
+		t.Fatalf("unexpected device-left message: %+v", devLeftA)
+	}
+}

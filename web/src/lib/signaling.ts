@@ -1,4 +1,4 @@
-import type { SignalingMessage, PeerInfo, IceServerConfig } from './types';
+import type { SignalingMessage, PeerInfo, DiscoveredDevice, IceServerConfig } from './types';
 
 export interface SignalingEvents {
   onSessionCreated?: (sessionId: string, peerId: string, iceServers: IceServerConfig[]) => void;
@@ -8,6 +8,12 @@ export interface SignalingEvents {
   onOffer?: (peerId: string, sdp: RTCSessionDescriptionInit) => void;
   onAnswer?: (peerId: string, sdp: RTCSessionDescriptionInit) => void;
   onIceCandidate?: (peerId: string, candidate: RTCIceCandidateInit) => void;
+  onPresenceList?: (devices: DiscoveredDevice[]) => void;
+  onDeviceJoined?: (device: DiscoveredDevice) => void;
+  onDeviceLeft?: (deviceId: string) => void;
+  onDeviceUpdated?: (device: DiscoveredDevice) => void;
+  onPairingInitiated?: (sessionId: string, targetDeviceId: string) => void;
+  onPairingInvitation?: (sessionId: string, fromDevice: DiscoveredDevice) => void;
   onError?: (error: string) => void;
   onStateChange?: (connected: boolean) => void;
 }
@@ -19,6 +25,9 @@ export class SignalingClient {
   private isExplicitlyClosed = false;
   private reconnectAttempts = 0;
   private reconnectTimer: any = null;
+  private currentDeviceId: string = '';
+  private currentDeviceName: string = '';
+  private currentDeviceType: string = '';
 
   constructor(events: SignalingEvents = {}, customWsUrl?: string) {
     this.events = events;
@@ -26,7 +35,6 @@ export class SignalingClient {
       this.url = customWsUrl;
     } else if (typeof window !== 'undefined') {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      // In local dev with Astro (4321) and Go backend (8080), can target port 8080 or current host
       const host = window.location.port === '4321' ? `${window.location.hostname}:8080` : window.location.host;
       this.url = `${protocol}//${host}/ws`;
     } else {
@@ -44,6 +52,11 @@ export class SignalingClient {
         this.ws.onopen = () => {
           this.reconnectAttempts = 0;
           this.events.onStateChange?.(true);
+
+          // Auto re-register presence if previously registered
+          if (this.currentDeviceId) {
+            this.registerPresence(this.currentDeviceId, this.currentDeviceName, this.currentDeviceType);
+          }
           resolve();
         };
 
@@ -104,6 +117,40 @@ export class SignalingClient {
     }
   }
 
+  public registerPresence(deviceId: string, deviceName: string, deviceType: string): void {
+    this.currentDeviceId = deviceId;
+    this.currentDeviceName = deviceName;
+    this.currentDeviceType = deviceType;
+
+    this.send({
+      type: 'register-presence',
+      deviceId,
+      deviceName,
+      deviceType,
+    });
+  }
+
+  public updatePresence(deviceName: string, deviceType: string): void {
+    this.currentDeviceName = deviceName;
+    this.currentDeviceType = deviceType;
+
+    this.send({
+      type: 'update-presence',
+      deviceId: this.currentDeviceId,
+      deviceName,
+      deviceType,
+    });
+  }
+
+  public requestPairing(targetDeviceId: string, deviceName: string, deviceType: string): void {
+    this.send({
+      type: 'request-pairing',
+      targetDeviceId,
+      deviceName,
+      deviceType,
+    });
+  }
+
   public createSession(deviceName: string, deviceType: string): void {
     this.send({
       type: 'create-session',
@@ -156,6 +203,50 @@ export class SignalingClient {
       const msg: SignalingMessage = JSON.parse(dataStr);
 
       switch (msg.type) {
+        // Discovery & Presence
+        case 'presence-list':
+          if (msg.devices) {
+            this.events.onPresenceList?.(msg.devices);
+          }
+          break;
+
+        case 'device-joined':
+          if (msg.device) {
+            this.events.onDeviceJoined?.(msg.device);
+          }
+          break;
+
+        case 'device-left':
+          if (msg.deviceId) {
+            this.events.onDeviceLeft?.(msg.deviceId);
+          }
+          break;
+
+        case 'device-updated':
+          if (msg.device) {
+            this.events.onDeviceUpdated?.(msg.device);
+          }
+          break;
+
+        case 'pairing-initiated':
+          if (msg.sessionId && msg.targetDeviceId) {
+            this.events.onPairingInitiated?.(msg.sessionId, msg.targetDeviceId);
+          }
+          break;
+
+        case 'pairing-invitation':
+          if (msg.sessionId && msg.targetDeviceId) {
+            const fromDevice: DiscoveredDevice = {
+              deviceId: msg.targetDeviceId,
+              deviceName: msg.deviceName || 'Nearby Device',
+              deviceType: (msg.deviceType as any) || 'desktop',
+              status: 'available',
+            };
+            this.events.onPairingInvitation?.(msg.sessionId, fromDevice);
+          }
+          break;
+
+        // WebRTC Rooms
         case 'session-created':
           if (msg.sessionId && msg.peerId) {
             this.events.onSessionCreated?.(msg.sessionId, msg.peerId, msg.iceServers || []);

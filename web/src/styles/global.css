@@ -1,35 +1,35 @@
 :root {
-  --color-canvas: #faf9f5;
-  --color-surface-soft: #f5f0e8;
-  --color-surface-card: #efe9de;
-  --color-surface-cream-strong: #e8e0d2;
-  --color-surface-dark: #181715;
-  --color-surface-dark-elevated: #252320;
-  --color-surface-dark-soft: #1f1e1b;
-  --color-hairline: #e6dfd8;
-  --color-hairline-soft: #ebe6df;
+  /* Cal.com Clean Modern SaaS Design Tokens (Light Theme) */
+  --color-canvas: #ffffff;
+  --color-surface-soft: #f8f9fa;
+  --color-surface-card: #f5f5f5;
+  --color-surface-strong: #e5e7eb;
+  --color-surface-dark: #101010;
+  --color-surface-dark-elevated: #1a1a1a;
+  --color-surface-dark-soft: #18181b;
+  --color-hairline: #e5e7eb;
+  --color-hairline-soft: #f3f4f6;
 
-  --color-primary: #cc785c;
-  --color-primary-active: #a9583e;
-  --color-primary-disabled: #e6dfd8;
+  --color-primary: #111111;
+  --color-primary-active: #242424;
+  --color-primary-disabled: #e5e7eb;
 
-  --color-ink: #141413;
-  --color-body: #3d3d3a;
-  --color-body-strong: #252523;
-  --color-muted: #6c6a64;
-  --color-muted-soft: #8e8b82;
+  --color-ink: #111111;
+  --color-body: #374151;
+  --color-body-strong: #111111;
+  --color-muted: #6b7280;
+  --color-muted-soft: #898989;
 
   --color-on-primary: #ffffff;
-  --color-on-dark: #faf9f5;
-  --color-on-dark-soft: #a09d96;
+  --color-on-dark: #ffffff;
+  --color-on-dark-soft: #a1a1aa;
 
-  --color-accent-teal: #5db8a6;
-  --color-accent-amber: #e8a55a;
-  --color-success: #5db872;
-  --color-warning: #d4a017;
-  --color-error: #c64545;
+  --color-brand-accent: #3b82f6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
 
-  --font-display: "Copernicus", "Tiempos Headline", "Cormorant Garamond", Georgia, serif;
+  --font-display: "Cal Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
@@ -39,6 +39,7 @@
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-pill: 9999px;
+  --radius-full: 9999px;
 
   --spacing-xxs: 4px;
   --spacing-xs: 8px;
@@ -49,7 +50,110 @@
   --spacing-xxl: 48px;
   --spacing-section: 96px;
 
-  --max-content-width: 1140px;
+  --max-content-width: 1200px;
+
+  /* Dedicated Radar Accent Tokens (Light) */
+  --radar-accent: #2563eb;
+  --radar-accent-muted: rgba(37, 99, 235, 0.12);
+  --radar-accent-bright: #3b82f6;
+  --radar-accent-glow: rgba(37, 99, 235, 0.08);
+  --radar-arc-color: rgba(0, 0, 0, 0.07);
+  --radar-scan-color: rgba(37, 99, 235, 0.08);
+  --radar-beacon-color: #2563eb;
+  --radar-prompt-color: #2563eb;
+  --radar-bg-glow: radial-gradient(circle at 50% 100%, rgba(37, 99, 235, 0.05) 0%, transparent 70%);
+}
+
+/* Dark Theme Variables */
+html[data-theme="dark"],
+html:not([data-theme="light"]):not([data-theme="dark"]) {
+  /* Evaluated in media query below */
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    --color-canvas: #101010;
+    --color-surface-soft: #141416;
+    --color-surface-card: #18181b;
+    --color-surface-strong: #27272a;
+    --color-surface-dark: #09090b;
+    --color-surface-dark-elevated: #18181b;
+    --color-surface-dark-soft: #141416;
+    --color-hairline: #27272a;
+    --color-hairline-soft: #1f1f23;
+
+    --color-primary: #ffffff;
+    --color-primary-active: #e4e4e7;
+    --color-primary-disabled: #3f3f46;
+
+    --color-ink: #ffffff;
+    --color-body: #d4d4d8;
+    --color-body-strong: #ffffff;
+    --color-muted: #a1a1aa;
+    --color-muted-soft: #71717a;
+
+    --color-on-primary: #111111;
+    --color-on-dark: #ffffff;
+    --color-on-dark-soft: #a1a1aa;
+
+    --color-brand-accent: #60a5fa;
+    --color-success: #34d399;
+    --color-warning: #fbbf24;
+    --color-error: #f87171;
+
+    /* Dedicated Radar Accent Tokens (Dark) */
+    --radar-accent: #3b82f6;
+    --radar-accent-muted: rgba(59, 130, 246, 0.16);
+    --radar-accent-bright: #60a5fa;
+    --radar-accent-glow: rgba(59, 130, 246, 0.16);
+    --radar-arc-color: rgba(255, 255, 255, 0.08);
+    --radar-scan-color: rgba(59, 130, 246, 0.12);
+    --radar-beacon-color: #3b82f6;
+    --radar-prompt-color: #60a5fa;
+    --radar-bg-glow: radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+  }
+}
+
+html[data-theme="dark"] {
+  --color-canvas: #101010;
+  --color-surface-soft: #141416;
+  --color-surface-card: #18181b;
+  --color-surface-strong: #27272a;
+  --color-surface-dark: #09090b;
+  --color-surface-dark-elevated: #18181b;
+  --color-surface-dark-soft: #141416;
+  --color-hairline: #27272a;
+  --color-hairline-soft: #1f1f23;
+
+  --color-primary: #ffffff;
+  --color-primary-active: #e4e4e7;
+  --color-primary-disabled: #3f3f46;
+
+  --color-ink: #ffffff;
+  --color-body: #d4d4d8;
+  --color-body-strong: #ffffff;
+  --color-muted: #a1a1aa;
+  --color-muted-soft: #71717a;
+
+  --color-on-primary: #111111;
+  --color-on-dark: #ffffff;
+  --color-on-dark-soft: #a1a1aa;
+
+  --color-brand-accent: #60a5fa;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
+
+  /* Dedicated Radar Accent Tokens (Dark) */
+  --radar-accent: #3b82f6;
+  --radar-accent-muted: rgba(59, 130, 246, 0.16);
+  --radar-accent-bright: #60a5fa;
+  --radar-accent-glow: rgba(59, 130, 246, 0.16);
+  --radar-arc-color: rgba(255, 255, 255, 0.08);
+  --radar-scan-color: rgba(59, 130, 246, 0.12);
+  --radar-beacon-color: #3b82f6;
+  --radar-prompt-color: #60a5fa;
+  --radar-bg-glow: radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
 }
 
 *, *::before, *::after {
@@ -64,62 +168,72 @@ html {
   color: var(--color-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.55;
+  line-height: 1.5;
   scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
-/* Typography */
+/* Typography per Cal.com Guidelines */
 h1, h2, h3, h4 {
   color: var(--color-ink);
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 600;
   line-height: 1.15;
 }
 
 h1 {
-  font-size: clamp(2.25rem, 5vw, 3.75rem);
-  letter-spacing: -1.2px;
-  line-height: 1.08;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  letter-spacing: -0.04em;
+  line-height: 1.05;
 }
 
 h2 {
-  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
-  letter-spacing: -0.8px;
-  line-height: 1.15;
+  font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+  letter-spacing: -0.035em;
+  line-height: 1.1;
 }
 
 h3 {
-  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
-  letter-spacing: -0.4px;
-  line-height: 1.25;
+  font-size: clamp(1.25rem, 2.5vw, 1.85rem);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+h4 {
+  font-family: var(--font-sans);
+  font-size: 1.1rem;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
 }
 
 p {
   color: var(--color-body);
   font-size: 1rem;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 p.lead {
-  font-size: 1.2rem;
-  color: var(--color-body-strong);
-  line-height: 1.6;
+  font-size: 1.25rem;
+  color: var(--color-body);
+  line-height: 1.5;
 }
 
 a {
-  color: var(--color-primary);
+  color: var(--color-brand-accent);
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 a:hover {
-  color: var(--color-primary-active);
+  opacity: 0.85;
 }
 
 code, pre {
@@ -147,6 +261,7 @@ code, pre {
   z-index: 50;
   display: flex;
   align-items: center;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .site-header .container {
@@ -199,17 +314,171 @@ code, pre {
   background-color: var(--color-surface-soft);
 }
 
-/* Buttons */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Theme Toggle Control */
+.theme-toggle-btn {
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  color: var(--color-muted);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.theme-toggle-btn:hover {
+  color: var(--color-ink);
+  background: var(--color-surface-soft);
+  border-color: var(--color-hairline-soft);
+}
+
+/* Dedicated App Header */
+.app-header {
+  height: 60px;
+  background-color: var(--color-canvas);
+  border-bottom: 1px solid var(--color-hairline);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.app-header-inner {
+  width: 100%;
+  max-width: 100%;
+  padding: 0 var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.app-header-left,
+.app-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.app-header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-brand-link {
+  display: flex;
+  align-items: center;
+  transition: transform 0.15s ease;
+}
+
+.app-brand-link:hover {
+  transform: scale(1.05);
+}
+
+.app-icon-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-body);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.app-icon-btn:hover,
+.app-icon-btn:focus-visible {
+  color: var(--color-ink);
+  background: var(--color-surface-soft);
+  border-color: var(--color-hairline);
+  outline: none;
+}
+
+.header-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-menu-dropdown {
+  position: absolute;
+  top: 54px;
+  left: var(--spacing-lg);
+  width: 220px;
+  padding: var(--spacing-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 100;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-hairline);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-lg);
+}
+
+.app-menu-item {
+  padding: 8px 12px;
+  color: var(--color-ink);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.app-menu-item:hover {
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+}
+
+.app-main-content {
+  min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Buttons per Cal.com Guidelines (Inter, 600 weight, 8px radius, height 40px) */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-xs);
   font-family: var(--font-sans);
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   line-height: 1;
   padding: 10px 18px;
+  height: 40px;
   border-radius: var(--radius-md);
   border: 1px solid transparent;
   cursor: pointer;
@@ -229,7 +498,8 @@ code, pre {
   color: var(--color-on-primary);
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-primary:focus-visible {
   background-color: var(--color-primary-active);
   color: var(--color-on-primary);
 }
@@ -240,7 +510,8 @@ code, pre {
   border-color: var(--color-hairline);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover,
+.btn-secondary:focus-visible {
   background-color: var(--color-surface-soft);
   color: var(--color-ink);
   border-color: var(--color-hairline);
@@ -249,31 +520,36 @@ code, pre {
 .btn-dark {
   background-color: var(--color-surface-dark);
   color: var(--color-on-dark);
+  border: 1px solid var(--color-hairline);
 }
 
-.btn-dark:hover {
+.btn-dark:hover,
+.btn-dark:focus-visible {
   background-color: var(--color-surface-dark-elevated);
   color: var(--color-on-dark);
 }
 
 .btn-sm {
+  height: 32px;
   padding: 6px 12px;
-  font-size: 0.825rem;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
 }
 
 .btn-lg {
-  padding: 14px 28px;
-  font-size: 1.05rem;
+  height: 48px;
+  padding: 14px 24px;
+  font-size: 16px;
 }
 
-/* Badges */
+/* Badges per Cal.com Guidelines (13px, weight 500, pill) */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: var(--radius-pill);
-  font-size: 0.775rem;
+  font-size: 13px;
   font-weight: 500;
   line-height: 1.2;
 }
@@ -284,16 +560,22 @@ code, pre {
   border: 1px solid var(--color-hairline);
 }
 
+.badge-accent {
+  background-color: var(--radar-accent-muted);
+  color: var(--radar-accent);
+  border: 1px solid var(--radar-accent-glow);
+}
+
 .badge-coral {
-  background-color: rgba(204, 120, 92, 0.12);
-  color: var(--color-primary-active);
-  border: 1px solid rgba(204, 120, 92, 0.25);
+  background-color: var(--radar-accent-muted);
+  color: var(--radar-accent);
+  border: 1px solid var(--radar-accent-glow);
 }
 
 .badge-success {
-  background-color: rgba(93, 184, 114, 0.15);
-  color: #2e7d42;
-  border: 1px solid rgba(93, 184, 114, 0.3);
+  background-color: rgba(16, 185, 129, 0.14);
+  color: var(--color-success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .badge-dot {
@@ -303,17 +585,24 @@ code, pre {
   background-color: currentColor;
 }
 
-/* Cards */
+/* Cards per Cal.com Guidelines (12px radius, subtle elevation) */
 .card {
   background-color: var(--color-surface-card);
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .card-dark {
   background-color: var(--color-surface-dark);
   color: var(--color-on-dark);
+  border: 1px solid var(--color-surface-dark-elevated);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
 }
@@ -326,7 +615,7 @@ code, pre {
   color: var(--color-on-dark-soft);
 }
 
-/* Inputs */
+/* Inputs per Cal.com Guidelines (Height 40px, 8px radius) */
 .input, .textarea {
   width: 100%;
   background-color: var(--color-canvas);
@@ -334,15 +623,26 @@ code, pre {
   border-radius: var(--radius-md);
   padding: 10px 14px;
   font-family: var(--font-sans);
-  font-size: 0.95rem;
+  font-size: 14px;
   color: var(--color-ink);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
+}
+
+.input {
+  height: 40px;
+}
+
+.input-sm {
+  height: 32px;
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
 }
 
 .input:focus, .textarea:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(204, 120, 92, 0.15);
+  border-color: var(--radar-accent);
+  box-shadow: 0 0 0 3px var(--radar-accent-muted);
 }
 
 /* Footer */
@@ -399,21 +699,38 @@ code, pre {
   color: var(--color-on-dark-soft);
 }
 
-/* Responsive */
-@media (max-width: 900px) {
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 992px) {
   .footer-grid {
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-xl);
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .site-header {
     height: 64px;
   }
   .nav-links {
     display: none;
   }
+  .container {
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
+  }
+}
+
+@media (max-width: 640px) {
   .footer-grid {
     grid-template-columns: 1fr;
     gap: var(--spacing-lg);
@@ -422,5 +739,8 @@ code, pre {
     flex-direction: column;
     gap: var(--spacing-md);
     text-align: center;
+  }
+  .brand-name {
+    font-size: 1.2rem;
   }
 }

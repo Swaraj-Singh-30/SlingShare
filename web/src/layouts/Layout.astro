@@ -10,6 +10,7 @@ interface Props {
   ogImage?: string;
   noindex?: boolean;
   structuredData?: Record<string, any> | Record<string, any>[];
+  isApp?: boolean;
 }
 
 const {
@@ -20,6 +21,7 @@ const {
   ogImage = siteConfig.defaultSocialImage,
   noindex = false,
   structuredData,
+  isApp = false,
 } = Astro.props;
 
 const fullImageUrl = ogImage.startsWith('http') ? ogImage : `${siteConfig.siteUrl}${ogImage}`;
@@ -29,11 +31,27 @@ const fullImageUrl = ogImage.startsWith('http') ? ogImage : `${siteConfig.siteUr
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/logo.png" />
     <meta name="generator" content={Astro.generator} />
-    <meta name="theme-color" content="#faf9f5" />
+    <meta name="theme-color" content="#ffffff" />
+
+    <!-- Flash-prevention Theme Init Script -->
+    <script is:inline>
+      (function () {
+        try {
+          const savedTheme = localStorage.getItem('slingshare_theme');
+          if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else if (savedTheme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+          } else {
+            document.documentElement.setAttribute('data-theme', 'system');
+          }
+        } catch (e) {}
+      })();
+    </script>
 
     <!-- SEO Meta Tags -->
     <title>{title}</title>
@@ -60,11 +78,11 @@ const fullImageUrl = ogImage.startsWith('http') ? ogImage : `${siteConfig.siteUr
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={fullImageUrl} />
 
-    <!-- Typography Fonts -->
+    <!-- Typography Fonts per Cal.com Design System -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
 
@@ -78,92 +96,207 @@ const fullImageUrl = ogImage.startsWith('http') ? ogImage : `${siteConfig.siteUr
     )}
   </head>
   <body>
-    <header class="site-header">
-      <div class="container">
-        <a href="/" class="brand-link" aria-label="SlingShare Home">
-          <img src="/logo.png" alt="SlingShare Logo" class="brand-logo" width="38" height="38" />
-          <span class="brand-name">SlingShare</span>
-        </a>
+    {!isApp ? (
+      <header class="site-header">
+        <div class="container">
+          <a href="/" class="brand-link" aria-label="SlingShare Home">
+            <img src="/logo.png" alt="SlingShare Logo" class="brand-logo" width="38" height="38" />
+            <span class="brand-name">SlingShare</span>
+          </a>
 
-        <nav aria-label="Main Navigation">
-          <ul class="nav-links">
-            <li><a href="/docs/how-it-works" class="nav-link">How It Works</a></li>
-            <li><a href="/p2p-file-sharing" class="nav-link">P2P Sharing</a></li>
-            <li><a href="/airdrop-alternative" class="nav-link">AirDrop Alternative</a></li>
-            <li><a href="/security" class="nav-link">Security</a></li>
-            <li><a href="/docs" class="nav-link">Docs</a></li>
-          </ul>
-        </nav>
+          <nav aria-label="Main Navigation">
+            <ul class="nav-links">
+              <li><a href="/docs/how-it-works" class="nav-link">How It Works</a></li>
+              <li><a href="/p2p-file-sharing" class="nav-link">P2P Sharing</a></li>
+              <li><a href="/airdrop-alternative" class="nav-link">AirDrop Alternative</a></li>
+              <li><a href="/security" class="nav-link">Security</a></li>
+              <li><a href="/docs" class="nav-link">Docs</a></li>
+            </ul>
+          </nav>
 
-        <div class="header-actions">
-          <a href="/app" class="btn btn-primary btn-sm">Launch App</a>
+          <div class="header-actions">
+            <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle theme mode" title="Toggle theme (System / Light / Dark)">
+              <span id="themeIcon">🌓</span>
+            </button>
+            <a href="/app" class="btn btn-primary btn-sm">Launch App</a>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    ) : (
+      <header class="app-header">
+        <div class="app-header-inner">
+          <div class="app-header-left">
+            <button id="appMenuBtn" class="app-icon-btn" aria-label="Quick menu" title="SlingShare Navigation">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="5" cy="5" r="2.2" />
+                <circle cx="12" cy="5" r="2.2" />
+                <circle cx="19" cy="5" r="2.2" />
+                <circle cx="5" cy="12" r="2.2" />
+                <circle cx="12" cy="12" r="2.2" />
+                <circle cx="19" cy="12" r="2.2" />
+                <circle cx="5" cy="19" r="2.2" />
+                <circle cx="12" cy="19" r="2.2" />
+                <circle cx="19" cy="19" r="2.2" />
+              </svg>
+            </button>
+            <div id="appMenuDropdown" class="app-menu-dropdown card" style="display: none;">
+              <a href="/" class="app-menu-item">🏠 Home</a>
+              <a href="/docs/how-it-works" class="app-menu-item">📖 How It Works</a>
+              <a href="/p2p-file-sharing" class="app-menu-item">⚡ Direct P2P Sharing</a>
+              <a href="/airdrop-alternative" class="app-menu-item">📱 AirDrop Alternative</a>
+              <a href="/security" class="app-menu-item">🔒 Security & Privacy</a>
+            </div>
+          </div>
 
-    <main id="main-content">
+          <div class="app-header-center">
+            <a href="/" class="app-brand-link" aria-label="SlingShare Home" title="SlingShare Home">
+              <img src="/logo.png" alt="SlingShare Logo" class="app-brand-logo" width="34" height="34" />
+            </a>
+          </div>
+
+          <div class="app-header-right">
+            <button id="headerPairBtn" class="app-icon-btn" aria-label="Manual Pairing & Room Code" title="Pair via Room Code or QR">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </button>
+            <a href="/docs" class="app-icon-btn" aria-label="Documentation" title="Documentation">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+            </a>
+            <button id="headerWorkspaceToggleBtn" class="app-icon-btn" aria-label="Sharing Workspace" title="Files & Text Workspace">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span id="headerTransfersBadge" class="header-badge" style="display: none;">0</span>
+            </button>
+            <button id="headerInfoBtn" class="app-icon-btn" aria-label="About SlingShare" title="Network & About Info">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+            </button>
+            <button id="themeToggleBtn" class="theme-toggle-btn app-icon-btn" aria-label="Toggle theme mode" title="Toggle theme (System / Light / Dark)">
+              <span id="themeIcon">🌓</span>
+            </button>
+          </div>
+        </div>
+      </header>
+    )}
+
+    <main id="main-content" class={isApp ? 'app-main-content' : ''}>
       <slot />
     </main>
 
-    <footer class="site-footer">
-      <div class="container">
-        <div class="footer-grid">
-          <div class="footer-col brand-col">
-            <a href="/" class="brand-link" style="color: var(--color-on-dark); margin-bottom: 16px;">
-              <img src="/logo.png" alt="SlingShare Logo" class="brand-logo" width="32" height="32" />
-              <span class="brand-name" style="color: var(--color-on-dark);">SlingShare</span>
-            </a>
-            <p style="font-size: 0.9rem; margin-top: 12px; color: var(--color-on-dark-soft); max-width: 320px;">
-              Fast, privacy-first peer-to-peer file and text sharing. No accounts, no storage, no tracking. Direct between your devices.
-            </p>
+    {!isApp && (
+      <footer class="site-footer">
+        <div class="container">
+          <div class="footer-grid">
+            <div class="footer-col brand-col">
+              <a href="/" class="brand-link" style="color: var(--color-on-dark); margin-bottom: 16px;">
+                <img src="/logo.png" alt="SlingShare Logo" class="brand-logo" width="32" height="32" />
+                <span class="brand-name" style="color: var(--color-on-dark);">SlingShare</span>
+              </a>
+              <p style="font-size: 0.9rem; margin-top: 12px; color: var(--color-on-dark-soft); max-width: 320px;">
+                Fast, privacy-first peer-to-peer file and text sharing. No accounts, no storage, no tracking. Direct between your devices.
+              </p>
+            </div>
+
+            <div class="footer-col">
+              <h4>Product</h4>
+              <ul>
+                <li><a href="/app">Web App</a></li>
+                <li><a href="/text-sharing">Text Sharing</a></li>
+                <li><a href="/clipboard-sharing">Clipboard Sharing</a></li>
+                <li><a href="/share-files-without-uploading">Direct Sharing</a></li>
+              </ul>
+            </div>
+
+            <div class="footer-col">
+              <h4>Guides</h4>
+              <ul>
+                <li><a href="/how-to-send-files-between-phone-and-pc">Phone to PC</a></li>
+                <li><a href="/how-to-transfer-files-from-iphone-to-windows">iPhone to Windows</a></li>
+                <li><a href="/how-to-transfer-files-from-android-to-mac">Android to Mac</a></li>
+                <li><a href="/airdrop-alternative">AirDrop Alternative</a></li>
+              </ul>
+            </div>
+
+            <div class="footer-col">
+              <h4>Technology</h4>
+              <ul>
+                <li><a href="/docs/how-it-works">How It Works</a></li>
+                <li><a href="/p2p-file-sharing">P2P Architecture</a></li>
+                <li><a href="/docs/webrtc">WebRTC & NAT</a></li>
+                <li><a href="/docs/file-transfer">Chunking & Backpressure</a></li>
+              </ul>
+            </div>
+
+            <div class="footer-col">
+              <h4>Security & Privacy</h4>
+              <ul>
+                <li><a href="/security">Security Model</a></li>
+                <li><a href="/privacy">Privacy Policy</a></li>
+                <li><a href="/docs/troubleshooting">Troubleshooting</a></li>
+                <li><a href="/docs">All Documentation</a></li>
+              </ul>
+            </div>
           </div>
 
-          <div class="footer-col">
-            <h4>Product</h4>
-            <ul>
-              <li><a href="/app">Web App</a></li>
-              <li><a href="/text-sharing">Text Sharing</a></li>
-              <li><a href="/clipboard-sharing">Clipboard Sharing</a></li>
-              <li><a href="/share-files-without-uploading">Direct Sharing</a></li>
-            </ul>
-          </div>
-
-          <div class="footer-col">
-            <h4>Guides</h4>
-            <ul>
-              <li><a href="/how-to-send-files-between-phone-and-pc">Phone to PC</a></li>
-              <li><a href="/how-to-transfer-files-from-iphone-to-windows">iPhone to Windows</a></li>
-              <li><a href="/how-to-transfer-files-from-android-to-mac">Android to Mac</a></li>
-              <li><a href="/airdrop-alternative">AirDrop Alternative</a></li>
-            </ul>
-          </div>
-
-          <div class="footer-col">
-            <h4>Technology</h4>
-            <ul>
-              <li><a href="/docs/how-it-works">How It Works</a></li>
-              <li><a href="/p2p-file-sharing">P2P Architecture</a></li>
-              <li><a href="/docs/webrtc">WebRTC & NAT</a></li>
-              <li><a href="/docs/file-transfer">Chunking & Backpressure</a></li>
-            </ul>
-          </div>
-
-          <div class="footer-col">
-            <h4>Security & Privacy</h4>
-            <ul>
-              <li><a href="/security">Security Model</a></li>
-              <li><a href="/privacy">Privacy Policy</a></li>
-              <li><a href="/docs/troubleshooting">Troubleshooting</a></li>
-              <li><a href="/docs">All Documentation</a></li>
-            </ul>
+          <div class="footer-bottom">
+            <p>© {new Date().getFullYear()} SlingShare. Peer-to-peer file transfer engine.</p>
+            <p>Zero server file storage • End-to-end encrypted transport</p>
           </div>
         </div>
+      </footer>
+    )}
 
-        <div class="footer-bottom">
-          <p>© {new Date().getFullYear()} SlingShare. Peer-to-peer file transfer engine.</p>
-          <p>Zero server file storage • End-to-end encrypted transport</p>
-        </div>
-      </div>
-    </footer>
+    <!-- Theme Switcher Client Script -->
+    <script is:inline>
+      (function () {
+        const themeBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+
+        function updateIcon(mode) {
+          if (!themeIcon) return;
+          if (mode === 'dark') {
+            themeIcon.textContent = '🌙';
+          } else if (mode === 'light') {
+            themeIcon.textContent = '☀️';
+          } else {
+            themeIcon.textContent = '🌓';
+          }
+        }
+
+        const current = localStorage.getItem('slingshare_theme') || 'system';
+        updateIcon(current);
+
+        if (themeBtn) {
+          themeBtn.addEventListener('click', function () {
+            const existing = localStorage.getItem('slingshare_theme') || 'system';
+            let next = 'light';
+            if (existing === 'system') {
+              next = 'dark';
+            } else if (existing === 'dark') {
+              next = 'light';
+            } else {
+              next = 'system';
+            }
+
+            localStorage.setItem('slingshare_theme', next);
+            document.documentElement.setAttribute('data-theme', next);
+            updateIcon(next);
+          });
+        }
+      })();
+    </script>
   </body>
 </html>

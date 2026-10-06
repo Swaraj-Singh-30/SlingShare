@@ -10,133 +10,165 @@ const appStructuredData = getSoftwareApplicationSchema();
   description="Connect devices instantly and transfer files and text directly peer-to-peer. No accounts, no cloud storage, completely direct."
   structuredData={appStructuredData}
   noindex={true}
+  isApp={true}
 >
-  <div class="app-page">
-    <div class="container app-container">
-      <!-- Top Device & Connection Bar -->
-      <section class="device-bar card" aria-label="Device and Connection Status">
-        <div class="device-info">
-          <div class="device-icon" id="localDeviceIcon" aria-hidden="true">💻</div>
-          <div class="device-details">
-            <div class="device-name-row">
-              <span class="device-label">Your Device:</span>
-              <strong id="localDeviceName">Detecting...</strong>
-              <button id="editDeviceNameBtn" class="btn-text-action" title="Edit device name" aria-label="Edit device name">✎</button>
+  <div class="app-viewport">
+    <!-- Primary Dominant Experience: The Radar Surface -->
+    <section class="radar-surface" id="discoverySection" aria-label="Device Discovery Radar">
+      
+      <!-- Interactive Radar Canvas -->
+      <div class="radar-canvas" id="radarViewport">
+        
+        <!-- Concentric Radar Arcs anchored at bottom center (50%, 100%) -->
+        <div class="radar-arcs-layer" aria-hidden="true">
+          <div class="radar-arc radar-arc-1"></div>
+          <div class="radar-arc radar-arc-2"></div>
+          <div class="radar-arc radar-arc-3"></div>
+          <div class="radar-arc radar-arc-4"></div>
+          <div class="radar-arc radar-arc-5"></div>
+          <div class="radar-arc radar-arc-6"></div>
+          <div class="radar-arc radar-arc-7"></div>
+          <div class="radar-arc radar-arc-8"></div>
+          <div class="radar-scan-sweep"></div>
+        </div>
+
+        <!-- Upper Sky Calm Prompt (Strictly matching visual reference Picture 1) -->
+        <div class="radar-field-prompt" id="radarFieldPrompt">
+          <p class="radar-sky-hint" id="discoveryStatusText">Click to send files or right click to send a message and paste an image</p>
+        </div>
+
+        <!-- Discovered Device Nodes Layer (Plotted in the Arc Expanse) -->
+        <div class="radar-nodes-layer" id="radarNodesLayer"></div>
+
+        <!-- Bottom-Center Transmitter Beacon (Visual Reference Alignment) -->
+        <div class="radar-transmitter" id="radarSelfNode">
+          <div class="radar-beacon-icon" aria-hidden="true">
+            <svg class="beacon-svg" width="56" height="56" viewBox="0 0 64 64" fill="none">
+              <!-- Radiating broadcast arches -->
+              <path d="M12 28 C12 16, 52 16, 52 28" stroke="var(--radar-beacon-color)" stroke-width="2.8" stroke-linecap="round" fill="none" opacity="0.45" />
+              <path d="M18 34 C18 24, 46 24, 46 34" stroke="var(--radar-beacon-color)" stroke-width="2.8" stroke-linecap="round" fill="none" opacity="0.75" />
+              <path d="M24 40 C24 33, 40 33, 40 40" stroke="var(--radar-beacon-color)" stroke-width="3" stroke-linecap="round" fill="none" />
+              <!-- Transmitter apex triangle -->
+              <polygon points="32,38 24,52 40,52" fill="var(--radar-beacon-color)" />
+              <circle cx="32" cy="38" r="2.5" fill="#ffffff" />
+            </svg>
+            <div class="beacon-halo"></div>
+            <span class="beacon-core-dot" id="radarSelfIcon" style="display: none;">💻</span>
+          </div>
+          <div class="radar-transmitter-info">
+            <div class="radar-self-identity">
+              <span class="self-prefix">You are known as </span>
+              <button id="editDeviceNameBtn" class="radar-self-name-btn" title="Click to rename device" aria-label="Edit device name">
+                <strong id="localDeviceName">Detecting...</strong>
+                <span class="edit-pencil-icon" aria-hidden="true">✎</span>
+              </button>
             </div>
-            <div class="connection-status-row">
-              <span class="status-indicator disconnected" id="statusDot"></span>
-              <span id="connectionStatusText">Ready to connect</span>
-              <span class="badge badge-card" id="connectionTypeBadge" style="display: none;">Direct P2P</span>
-            </div>
+            <p class="radar-self-subtitle">You can be discovered by everyone on this network</p>
           </div>
         </div>
 
-        <div class="session-actions" id="sessionBar">
-          <!-- Session not created / joined yet -->
-          <div class="session-entry-group" id="sessionEntryGroup">
-            <button id="createSessionBtn" class="btn btn-primary">Create Session</button>
-            <div class="join-inline-group">
-              <input
-                type="text"
-                id="joinCodeInput"
-                class="input input-sm join-input"
-                placeholder="6-char code"
-                maxlength="6"
-                aria-label="Enter 6-character room code"
-              />
-              <button id="joinSessionBtn" class="btn btn-secondary btn-sm">Join</button>
-            </div>
+        <!-- Radar Bottom Controls: Minimal Accessible List Fallback Pill -->
+        <div class="radar-bottom-bar">
+          <div class="radar-view-controls">
+            <button id="viewRadarBtn" class="view-toggle-btn active" title="Switch to Radar view" aria-label="Radar view">◉ Radar</button>
+            <button id="viewListBtn" class="view-toggle-btn" title="Switch to List view" aria-label="List view">☰ List</button>
           </div>
-
-          <!-- Active Session Info -->
-          <div class="session-active-group" id="sessionActiveGroup" style="display: none;">
-            <div class="session-code-display">
-              <span class="session-code-label">Room Code:</span>
-              <code class="session-code-value" id="activeSessionCode">------</code>
-              <button id="copyCodeBtn" class="btn btn-secondary btn-sm" title="Copy Room Code">Copy Code</button>
-              <button id="showQrBtn" class="btn btn-secondary btn-sm" title="Show QR Code">QR Code</button>
-            </div>
-            <button id="leaveSessionBtn" class="btn btn-secondary btn-sm btn-danger-hover">Leave</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Connected Peer Banner -->
-      <div id="peerBanner" class="peer-banner card" style="display: none;">
-        <div class="peer-info-content">
-          <div class="peer-icon" id="remotePeerIcon">📱</div>
-          <div class="peer-text">
-            <div class="peer-title">Connected with <strong id="remotePeerName">Remote Device</strong></div>
-            <div class="peer-subtitle" id="remotePeerSubtitle">Direct WebRTC DataChannel active • End-to-end encrypted</div>
-          </div>
-        </div>
-        <div class="peer-status-tag">
-          <span class="badge badge-success">
-            <span class="badge-dot"></span> Paired
-          </span>
         </div>
       </div>
 
-      <!-- Main Sharing Workspace -->
-      <main class="sharing-workspace" id="sharingWorkspace">
-        <!-- Navigation Tabs -->
-        <div class="workspace-tabs" role="tablist">
-          <button class="tab-btn active" id="tabFilesBtn" role="tab" aria-selected="true" aria-controls="panelFiles">
-            📁 Files
+      <!-- Accessible List View Fallback (When List view toggled) -->
+      <div class="discovery-list-container" id="discoveryListContainer" style="display: none;">
+        <div class="discovery-list-header">
+          <h3>Nearby Discovered Devices</h3>
+          <p>Select any available peer to connect and share files:</p>
+        </div>
+        <div class="discovered-items-list" id="discoveredItemsList">
+          <div class="empty-list-state" id="emptyListState">
+            No other SlingShare devices found. Open SlingShare on another device to discover it here.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SELECTED DEVICE SHARING OVERLAY (Revealed ONLY after device selection) -->
+    <div class="selected-sharing-overlay" id="selectedSharingOverlay" style="display: none;">
+      <div class="selected-sharing-card card" id="selectedSharingCard" role="region" aria-label="Device Sharing Controls">
+        
+        <!-- Header row with Back button & Connection Status -->
+        <div class="sharing-card-header">
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="backToRadarBtn" class="btn btn-secondary btn-sm back-to-radar-btn" title="Choose another device">
+              <span aria-hidden="true">←</span> Choose another device
+            </button>
+            <button id="retryConnectionBtn" class="btn btn-secondary btn-sm" title="Retry connection" style="display: none;">
+              ↻ Retry
+            </button>
+          </div>
+          <div class="connection-pill" id="connectionPill">
+            <span class="status-indicator disconnected" id="statusDot"></span>
+            <span id="connectionStatusText">Connecting...</span>
+            <span class="badge badge-card" id="connectionTypeBadge" style="display: none;">Direct P2P</span>
+          </div>
+        </div>
+
+        <!-- Target Device Info Banner -->
+        <div class="selected-target-banner">
+          <div class="selected-target-avatar" id="selectedTargetIcon">📱</div>
+          <div class="selected-target-text">
+            <span class="selected-target-prefix">Sending to</span>
+            <h3 class="selected-target-name" id="remotePeerName">Target Device</h3>
+            <span class="selected-target-sub" id="remotePeerSubtitle">Waiting for connection...</span>
+          </div>
+        </div>
+
+        <!-- Sharing Mode Selector: [ File ] [ Text ] -->
+        <div class="sharing-mode-selector" role="tablist">
+          <button class="mode-tab active" id="tabFilesBtn" role="tab" aria-selected="true" aria-controls="panelFiles">
+            📁 File
           </button>
-          <button class="tab-btn" id="tabTextBtn" role="tab" aria-selected="false" aria-controls="panelText">
-            💬 Text & Clipboard
+          <button class="mode-tab" id="tabTextBtn" role="tab" aria-selected="false" aria-controls="panelText">
+            💬 Text
           </button>
         </div>
 
-        <!-- Files Tab Panel -->
-        <div class="tab-panel active" id="panelFiles" role="tabpanel" aria-labelledby="tabFilesBtn">
-          <!-- Drop Zone -->
-          <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-label="Drop files here or click to select files">
+        <!-- Mode Panel: File Transfer -->
+        <div class="mode-content-panel active" id="panelFiles" role="tabpanel" aria-labelledby="tabFilesBtn">
+          <div class="drop-zone disabled" id="dropZone" tabindex="0" role="button" aria-label="Drop files here or click to select files">
             <input type="file" id="fileInput" multiple style="display: none;" />
             <div class="drop-zone-content">
-              <div class="drop-icon">📤</div>
-              <h3>Drag and drop files here</h3>
-              <p>or click to browse from your device</p>
-              <span class="drop-zone-hint">Any file size • No server storage • Direct peer-to-peer streaming</span>
+              <div class="drop-icon" id="dropZoneIcon">⏳</div>
+              <h4 id="dropZoneTitle">Connecting...</h4>
+              <p id="dropZoneSubtitle">File transfer will enable automatically once connected</p>
+              <span class="drop-zone-hint" id="dropZoneHint">Direct WebRTC DataChannel streaming</span>
             </div>
           </div>
 
-          <!-- Active Transfers Section -->
-          <div class="transfers-section" id="transfersSection">
-            <div class="section-header-row">
-              <h3>Transfers</h3>
-              <span id="transfersCount" class="badge badge-card">0 active</span>
-            </div>
-
+          <!-- Active Transfers Progress List -->
+          <div class="transfers-container" id="transfersSection">
             <div class="transfers-list" id="transfersList">
-              <div class="empty-state" id="emptyTransfersState">
-                No active transfers. Drop a file above to send to your paired device.
+              <div class="empty-state" id="emptyTransfersState" style="display: none;">
+                No active transfers. Drop a file to begin.
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Text & Clipboard Tab Panel -->
-        <div class="tab-panel" id="panelText" role="tabpanel" aria-labelledby="tabTextBtn" style="display: none;">
-          <div class="text-sharing-card card">
-            <div class="text-input-header">
-              <label for="textShareInput" class="text-input-label">Share Text or Links</label>
-              <div class="text-actions-top">
-                <button id="pasteClipboardBtn" class="btn btn-secondary btn-sm" title="Paste from clipboard">
-                  📋 Paste Clipboard
-                </button>
-              </div>
+        <!-- Mode Panel: Text & Clipboard -->
+        <div class="mode-content-panel" id="panelText" role="tabpanel" aria-labelledby="tabTextBtn" style="display: none;">
+          <div class="text-composer-card">
+            <div class="text-composer-top">
+              <label for="textShareInput" class="composer-label">Send text</label>
+              <button id="pasteClipboardBtn" class="btn btn-secondary btn-sm" title="Paste from clipboard">
+                📋 Paste
+              </button>
             </div>
-
             <textarea
               id="textShareInput"
-              class="textarea"
+              class="textarea composer-textarea"
               rows="4"
-              placeholder="Type or paste text, URLs, code snippets to share with connected device..."
+              placeholder="Type or paste text, links, or notes..."
             ></textarea>
-
-            <div class="text-input-footer">
+            <div class="text-composer-footer">
               <span class="char-count" id="textCharCount">0 characters</span>
               <button id="sendTextBtn" class="btn btn-primary" disabled>
                 Send Text
@@ -144,92 +176,188 @@ const appStructuredData = getSoftwareApplicationSchema();
             </div>
           </div>
 
-          <!-- Received Messages Stream -->
-          <div class="messages-stream-section">
-            <div class="section-header-row">
-              <h3>Shared Snippets</h3>
-              <button id="clearMessagesBtn" class="btn-text-action" style="display: none;">Clear</button>
+          <!-- Sent / Received Snippets -->
+          <div class="messages-container" id="messagesSection">
+            <div class="section-header-row" id="messagesHeaderRow" style="display: none;">
+              <h4>Conversation History</h4>
+              <button id="clearMessagesBtn" class="btn-text-action">Clear</button>
             </div>
-
             <div class="messages-list" id="messagesList">
-              <div class="empty-state" id="emptyMessagesState">
-                No shared text yet. Sent or received snippets will appear here.
+              <div class="empty-state" id="emptyMessagesState" style="display: none;">
+                No messages yet.
               </div>
             </div>
           </div>
         </div>
-      </main>
 
-      <!-- Waiting / Prompt State (when no peer is connected) -->
-      <div class="waiting-prompt card" id="waitingPrompt" style="display: none;">
-        <div class="waiting-icon">⏳</div>
-        <h3>Waiting for another device to connect</h3>
-        <p>
-          Open SlingShare on your second device and enter the room code <strong id="waitingPromptCode">------</strong>, or scan the QR code to pair automatically.
-        </p>
-        <button id="waitingPromptQrBtn" class="btn btn-secondary btn-sm" style="margin-top: 12px;">View Pairing QR Code</button>
       </div>
     </div>
+
+    <!-- Connected Peer Floating Banner (Preserved for status indicators) -->
+    <div id="peerBanner" class="peer-banner card" style="display: none;">
+      <div class="peer-info-content">
+        <div class="peer-icon" id="remotePeerIcon">📱</div>
+        <div class="peer-text">
+          <div class="peer-title">Connected with <strong id="bannerRemotePeerName">Remote Device</strong></div>
+          <div class="peer-subtitle" id="bannerRemotePeerSubtitle">Direct WebRTC DataChannel active • End-to-end encrypted</div>
+        </div>
+      </div>
+      <div class="peer-status-tag">
+        <span class="badge badge-success">
+          <span class="badge-dot"></span> Paired
+        </span>
+        <button id="leaveSessionBtn" class="btn btn-secondary btn-sm btn-danger-hover">Leave</button>
+      </div>
+    </div>
+
+    <!-- Hidden state elements for testing & status preservation -->
+    <div class="system-status-hidden" style="display: none;">
+      <span class="badge badge-card" id="transfersCount">0 active</span>
+      <span id="localDeviceIcon">💻</span>
+    </div>
+
+    <!-- Manual Room & QR Pairing Dialog (Accessible via header pair button) -->
+    <dialog id="sessionModal" class="modal-dialog">
+      <div class="modal-content card">
+        <div class="modal-header">
+          <h3>Pair via Room Code or QR</h3>
+          <button id="closeSessionModalBtn" class="btn-icon-close" aria-label="Close dialog">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="session-entry-group" id="sessionEntryGroup">
+            <p style="font-size: 0.9rem; margin-bottom: 12px; color: var(--color-muted);">
+              Create a private 6-character room code or enter an existing code:
+            </p>
+            <button id="createSessionBtn" class="btn btn-primary btn-sm" style="width: 100%; margin-bottom: 12px;">Create New Room</button>
+            <div class="join-inline-group" style="display: flex; gap: 8px;">
+              <input
+                type="text"
+                id="joinCodeInput"
+                class="input input-sm join-input"
+                placeholder="6-char code"
+                maxlength="6"
+                aria-label="Enter 6-character room code"
+                style="flex: 1;"
+              />
+              <button id="joinSessionBtn" class="btn btn-secondary btn-sm">Join Room</button>
+            </div>
+          </div>
+
+          <div class="session-active-group" id="sessionActiveGroup" style="display: none;">
+            <div class="session-code-display" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+              <span class="session-code-label">Room Code:</span>
+              <code class="session-code-value" id="activeSessionCode" style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary);">------</code>
+              <button id="copyCodeBtn" class="btn btn-secondary btn-sm" title="Copy Room Code">Copy</button>
+              <button id="showQrBtn" class="btn btn-secondary btn-sm" title="Show QR Code">QR</button>
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+              <button id="modalLeaveSessionBtn" class="btn btn-secondary btn-sm btn-danger-hover">Leave Session</button>
+            </div>
+          </div>
+
+          <!-- Waiting Prompt (For manually joined rooms) -->
+          <div class="waiting-prompt card" id="waitingPrompt" style="display: none; margin-top: 16px;">
+            <div class="waiting-icon">⏳</div>
+            <h4>Waiting for peer to join</h4>
+            <p style="font-size: 0.85rem; color: var(--color-muted); margin-bottom: 8px;">
+              Enter room code <strong id="waitingPromptCode">------</strong> on your second device or scan the QR code.
+            </p>
+            <button id="waitingPromptQrBtn" class="btn btn-secondary btn-sm">View Pairing QR Code</button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- QR Code Modal Dialog -->
+    <dialog id="qrModal" class="modal-dialog">
+      <div class="modal-content card">
+        <div class="modal-header">
+          <h3>Pair Device</h3>
+          <button id="closeQrModalBtn" class="btn-icon-close" aria-label="Close dialog">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">Scan with your phone or tablet camera to join this session directly:</p>
+          <div class="qr-wrapper">
+            <canvas id="qrCanvas"></canvas>
+          </div>
+          <div class="share-link-group">
+            <input type="text" id="shareUrlInput" class="input input-sm" readonly />
+            <button id="copyShareUrlBtn" class="btn btn-primary btn-sm">Copy Link</button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Edit Device Name Modal Dialog -->
+    <dialog id="editNameModal" class="modal-dialog">
+      <div class="modal-content card">
+        <div class="modal-header">
+          <h3>Edit Device Name</h3>
+          <button id="closeEditNameModalBtn" class="btn-icon-close" aria-label="Close dialog">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="margin-bottom: 16px;">
+            <label for="customDeviceNameInput" style="display: block; font-size: 0.9rem; margin-bottom: 8px;">Device Name (1–40 characters):</label>
+            <input type="text" id="customDeviceNameInput" class="input" maxlength="40" placeholder="e.g. Swaraj's MacBook, Work Laptop" />
+            <small id="deviceNameError" style="color: var(--color-error); display: none; margin-top: 4px;">Name must be between 1 and 40 characters.</small>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 8px;">
+            <button id="cancelEditNameBtn" class="btn btn-secondary btn-sm">Cancel</button>
+            <button id="saveEditNameBtn" class="btn btn-primary btn-sm">Save</button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Info / Network Modal Dialog -->
+    <dialog id="infoModal" class="modal-dialog">
+      <div class="modal-content card">
+        <div class="modal-header">
+          <h3>About SlingShare</h3>
+          <button id="closeInfoModalBtn" class="btn-icon-close" aria-label="Close dialog">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom: 12px; font-size: 0.95rem;">
+            <strong>SlingShare</strong> is a privacy-first, zero-cloud peer-to-peer file and text sharing application.
+          </p>
+          <ul style="padding-left: 20px; font-size: 0.9rem; line-height: 1.6; color: var(--color-body); margin-bottom: 16px;">
+            <li>Direct WebRTC DataChannels between your devices.</li>
+            <li>No accounts, no tracking, zero server storage.</li>
+            <li>Chunked streaming with SHA-256 cryptographic verification.</li>
+            <li>Active device discovery without local network IP scanning.</li>
+          </ul>
+          <p style="font-size: 0.85rem; color: var(--color-muted);">
+            Nearby devices running SlingShare discover each other automatically.
+          </p>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
   </div>
-
-  <!-- QR Code Modal Dialog -->
-  <dialog id="qrModal" class="modal-dialog">
-    <div class="modal-content card">
-      <div class="modal-header">
-        <h3>Pair Device</h3>
-        <button id="closeQrModalBtn" class="btn-icon-close" aria-label="Close dialog">✕</button>
-      </div>
-      <div class="modal-body">
-        <p class="modal-desc">Scan with your phone or tablet camera to join this session directly:</p>
-        <div class="qr-wrapper">
-          <canvas id="qrCanvas"></canvas>
-        </div>
-        <div class="share-link-group">
-          <input type="text" id="shareUrlInput" class="input input-sm" readonly />
-          <button id="copyShareUrlBtn" class="btn btn-primary btn-sm">Copy Link</button>
-        </div>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- Edit Device Name Modal Dialog -->
-  <dialog id="editNameModal" class="modal-dialog">
-    <div class="modal-content card">
-      <div class="modal-header">
-        <h3>Edit Device Name</h3>
-        <button id="closeEditNameModalBtn" class="btn-icon-close" aria-label="Close dialog">✕</button>
-      </div>
-      <div class="modal-body">
-        <div style="margin-bottom: 16px;">
-          <label for="customDeviceNameInput" style="display: block; font-size: 0.9rem; margin-bottom: 8px;">Device Name:</label>
-          <input type="text" id="customDeviceNameInput" class="input" maxlength="32" placeholder="e.g. MacBook Pro, Work Laptop" />
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 8px;">
-          <button id="cancelEditNameBtn" class="btn btn-secondary btn-sm">Cancel</button>
-          <button id="saveEditNameBtn" class="btn btn-primary btn-sm">Save</button>
-        </div>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- Toast Notification Container -->
-  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
   <!-- Client-side Application Logic -->
   <script>
     import QRCode from 'qrcode';
-    import { detectDevice, saveCustomDeviceName } from '../lib/device';
+    import { detectDevice, saveCustomDeviceName, validateDeviceNameResult } from '../lib/device';
     import { SignalingClient } from '../lib/signaling';
     import { WebRTCManager } from '../lib/webrtc';
     import { TransferManager } from '../lib/transfer';
-    import type { FileTransferState, DataChannelMessage } from '../lib/types';
+    import type { FileTransferState, DataChannelMessage, DiscoveredDevice } from '../lib/types';
 
     // Application State
     let localDevice = detectDevice();
     let currentSessionId = '';
     let myPeerId = '';
+    let selectedDevice: DiscoveredDevice | null = null;
     let connectedPeer: { id: string; deviceName: string; deviceType: string } | null = null;
     let isInitiator = false;
+    let pendingFilesToSend: File[] = [];
+
+    // Discovery State
+    const discoveredDevices = new Map<string, DiscoveredDevice>();
+    let currentViewMode: 'radar' | 'list' = 'radar';
 
     // Core Managers
     let signaling: SignalingClient;
@@ -238,12 +366,26 @@ const appStructuredData = getSoftwareApplicationSchema();
 
     // DOM Elements
     const localDeviceNameEl = document.getElementById('localDeviceName')!;
-    const localDeviceIconEl = document.getElementById('localDeviceIcon')!;
     const editDeviceNameBtn = document.getElementById('editDeviceNameBtn')!;
     const statusDotEl = document.getElementById('statusDot')!;
     const connectionStatusTextEl = document.getElementById('connectionStatusText')!;
     const connectionTypeBadgeEl = document.getElementById('connectionTypeBadge')!;
 
+    // Header actions
+    const appMenuBtn = document.getElementById('appMenuBtn');
+    const appMenuDropdown = document.getElementById('appMenuDropdown');
+    const headerPairBtn = document.getElementById('headerPairBtn');
+    const headerWorkspaceToggleBtn = document.getElementById('headerWorkspaceToggleBtn');
+    const headerTransfersBadge = document.getElementById('headerTransfersBadge');
+    const headerInfoBtn = document.getElementById('headerInfoBtn');
+
+    // Modals
+    const sessionModal = document.getElementById('sessionModal') as HTMLDialogElement;
+    const closeSessionModalBtn = document.getElementById('closeSessionModalBtn');
+    const infoModal = document.getElementById('infoModal') as HTMLDialogElement;
+    const closeInfoModalBtn = document.getElementById('closeInfoModalBtn');
+
+    // Session controls
     const sessionEntryGroup = document.getElementById('sessionEntryGroup')!;
     const sessionActiveGroup = document.getElementById('sessionActiveGroup')!;
     const createSessionBtn = document.getElementById('createSessionBtn') as HTMLButtonElement;
@@ -253,21 +395,45 @@ const appStructuredData = getSoftwareApplicationSchema();
     const copyCodeBtn = document.getElementById('copyCodeBtn')!;
     const showQrBtn = document.getElementById('showQrBtn')!;
     const leaveSessionBtn = document.getElementById('leaveSessionBtn')!;
+    const modalLeaveSessionBtn = document.getElementById('modalLeaveSessionBtn');
 
+    // Peer banner & Waiting prompt
     const peerBanner = document.getElementById('peerBanner')!;
     const remotePeerNameEl = document.getElementById('remotePeerName')!;
-    const remotePeerIconEl = document.getElementById('remotePeerIcon')!;
     const remotePeerSubtitleEl = document.getElementById('remotePeerSubtitle')!;
+    const bannerRemotePeerName = document.getElementById('bannerRemotePeerName');
+    const bannerRemotePeerSubtitle = document.getElementById('bannerRemotePeerSubtitle');
+    const remotePeerIconEl = document.getElementById('remotePeerIcon')!;
     const waitingPrompt = document.getElementById('waitingPrompt')!;
     const waitingPromptCodeEl = document.getElementById('waitingPromptCode')!;
     const waitingPromptQrBtn = document.getElementById('waitingPromptQrBtn')!;
 
+    // Discovery & Radar Elements
+    const discoverySection = document.getElementById('discoverySection')!;
+    const discoveryStatusText = document.getElementById('discoveryStatusText')!;
+    const radarViewport = document.getElementById('radarViewport')!;
+    const radarNodesLayer = document.getElementById('radarNodesLayer')!;
+    const discoveryListContainer = document.getElementById('discoveryListContainer')!;
+    const discoveredItemsList = document.getElementById('discoveredItemsList')!;
+    const viewRadarBtn = document.getElementById('viewRadarBtn')!;
+    const viewListBtn = document.getElementById('viewListBtn')!;
+
+    // Selected Device Sharing Card Elements
+    const selectedSharingOverlay = document.getElementById('selectedSharingOverlay')!;
+    const selectedSharingCard = document.getElementById('selectedSharingCard')!;
+    const backToRadarBtn = document.getElementById('backToRadarBtn')!;
+    const selectedTargetIconEl = document.getElementById('selectedTargetIcon')!;
+    const retryConnectionBtn = document.getElementById('retryConnectionBtn');
     const tabFilesBtn = document.getElementById('tabFilesBtn')!;
     const tabTextBtn = document.getElementById('tabTextBtn')!;
     const panelFiles = document.getElementById('panelFiles')!;
     const panelText = document.getElementById('panelText')!;
 
     const dropZone = document.getElementById('dropZone')!;
+    const dropZoneIconEl = document.getElementById('dropZoneIcon');
+    const dropZoneTitleEl = document.getElementById('dropZoneTitle');
+    const dropZoneSubtitleEl = document.getElementById('dropZoneSubtitle');
+    const dropZoneHintEl = document.getElementById('dropZoneHint');
     const fileInput = document.getElementById('fileInput') as HTMLInputElement;
     const transfersList = document.getElementById('transfersList')!;
     const emptyTransfersState = document.getElementById('emptyTransfersState')!;
@@ -277,6 +443,8 @@ const appStructuredData = getSoftwareApplicationSchema();
     const textCharCountEl = document.getElementById('textCharCount')!;
     const sendTextBtn = document.getElementById('sendTextBtn') as HTMLButtonElement;
     const pasteClipboardBtn = document.getElementById('pasteClipboardBtn')!;
+    const messagesSection = document.getElementById('messagesSection')!;
+    const messagesHeaderRow = document.getElementById('messagesHeaderRow')!;
     const messagesList = document.getElementById('messagesList')!;
     const emptyMessagesState = document.getElementById('emptyMessagesState')!;
     const clearMessagesBtn = document.getElementById('clearMessagesBtn')!;
@@ -289,6 +457,7 @@ const appStructuredData = getSoftwareApplicationSchema();
 
     const editNameModal = document.getElementById('editNameModal') as HTMLDialogElement;
     const customDeviceNameInput = document.getElementById('customDeviceNameInput') as HTMLInputElement;
+    const deviceNameError = document.getElementById('deviceNameError')!;
     const cancelEditNameBtn = document.getElementById('cancelEditNameBtn')!;
     const saveEditNameBtn = document.getElementById('saveEditNameBtn')!;
     const closeEditNameModalBtn = document.getElementById('closeEditNameModalBtn')!;
@@ -309,25 +478,494 @@ const appStructuredData = getSoftwareApplicationSchema();
 
     function getDeviceIcon(type: string): string {
       switch (type) {
-        case 'phone': return '📱';
-        case 'tablet': return '📟';
-        case 'laptop': return '💻';
-        case 'desktop': return '🖥️';
-        default: return '💻';
+        case 'phone':
+          return '📱';
+        case 'tablet':
+          return '📟';
+        case 'laptop':
+          return '💻';
+        case 'desktop':
+        default:
+          return '🖥️';
+      }
+    }
+
+    function getDeviceIconSvg(type: string): string {
+      switch (type) {
+        case 'phone':
+          return `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" class="device-vector-svg">
+            <rect x="6" y="2" width="12" height="20" rx="3" fill="#ffffff"/>
+            <rect x="8" y="4.5" width="8" height="13" rx="1" fill="#2563eb"/>
+            <circle cx="12" cy="19.5" r="0.8" fill="#2563eb"/>
+          </svg>`;
+        case 'tablet':
+          return `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" class="device-vector-svg">
+            <rect x="4" y="2" width="16" height="20" rx="2.5" fill="#ffffff"/>
+            <rect x="6" y="4" width="12" height="15" rx="1" fill="#2563eb"/>
+            <circle cx="12" cy="20" r="0.8" fill="#2563eb"/>
+          </svg>`;
+        case 'laptop':
+          return `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" class="device-vector-svg">
+            <rect x="4" y="4" width="16" height="11" rx="1.5" fill="#ffffff"/>
+            <rect x="5.5" y="5.5" width="13" height="8" rx="0.5" fill="#2563eb"/>
+            <path d="M2 18h20a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" fill="#ffffff"/>
+          </svg>`;
+        case 'desktop':
+        default:
+          return `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" class="device-vector-svg">
+            <rect x="3" y="3" width="18" height="13" rx="2" fill="#ffffff"/>
+            <rect x="4.5" y="4.5" width="15" height="10" rx="1" fill="#2563eb"/>
+            <path d="M12 16v4M8 20h8" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>`;
+      }
+    }
+
+    function formatDeviceTypeLabel(type: string): string {
+      switch (type) {
+        case 'phone':
+          return 'Phone';
+        case 'tablet':
+          return 'Tablet';
+        case 'laptop':
+          return 'Laptop';
+        case 'desktop':
+        default:
+          return 'Computer';
       }
     }
 
     function formatBytes(bytes: number): string {
       if (bytes === 0) return '0 B';
       const k = 1024;
-      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
       const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
     }
 
-    function updateLocalDeviceDisplay() {
+    function formatSpeed(bytesPerSec: number): string {
+      return `${formatBytes(bytesPerSec)}/s`;
+    }
+
+    function escapeHtml(str: string): string {
+      return (str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function getFileExtension(fileName: string): string {
+      const parts = (fileName || '').split('.');
+      if (parts.length > 1) {
+        const ext = parts.pop()!.toUpperCase();
+        if (ext.length <= 6) return ext;
+      }
+      return 'FILE';
+    }
+
+    function getFileCategoryIconSvg(fileName: string, mimeType: string = ''): string {
+      const ext = (fileName || '').split('.').pop()?.toLowerCase() || '';
+      const mime = (mimeType || '').toLowerCase();
+
+      // Images
+      if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'heic'].includes(ext) || mime.startsWith('image/')) {
+        return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>`;
+      }
+
+      // Documents / PDF
+      if (ext === 'pdf' || mime === 'application/pdf') {
+        return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>`;
+      }
+
+      // Audio
+      if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a'].includes(ext) || mime.startsWith('audio/')) {
+        return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13"/>
+          <circle cx="6" cy="18" r="3"/>
+          <circle cx="18" cy="16" r="3"/>
+        </svg>`;
+      }
+
+      // Video
+      if (['mp4', 'mov', 'avi', 'mkv', 'webm', 'wmv'].includes(ext) || mime.startsWith('video/')) {
+        return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="23 7 16 12 23 17 23 7"/>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+        </svg>`;
+      }
+
+      // Archive / Zip
+      if (['zip', 'rar', 'tar', 'gz', '7z', 'bz2', 'xz'].includes(ext) || mime.includes('zip') || mime.includes('tar') || mime.includes('compressed')) {
+        return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="21 8 21 21 3 21 3 8"/>
+          <rect x="1" y="3" width="22" height="5"/>
+          <line x1="10" y1="12" x2="14" y2="12"/>
+        </svg>`;
+      }
+
+      // Code / Text
+      if (['txt', 'md', 'json', 'csv', 'js', 'ts', 'jsx', 'tsx', 'html', 'css', 'go', 'py', 'java', 'c', 'cpp', 'rs', 'sh'].includes(ext) || mime.startsWith('text/')) {
+        return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"/>
+          <polyline points="8 6 2 12 8 18"/>
+        </svg>`;
+      }
+
+      // Default File
+      return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <polyline points="13 2 13 9 20 9"/>
+      </svg>`;
+    }
+
+    // Header Quick Menu
+    appMenuBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (appMenuDropdown) {
+        const isShown = appMenuDropdown.style.display === 'flex';
+        appMenuDropdown.style.display = isShown ? 'none' : 'flex';
+      }
+    });
+
+    document.addEventListener('click', () => {
+      if (appMenuDropdown) {
+        appMenuDropdown.style.display = 'none';
+      }
+    });
+
+    // Session Modal Handlers
+    headerPairBtn?.addEventListener('click', () => {
+      sessionModal?.showModal();
+    });
+
+    closeSessionModalBtn?.addEventListener('click', () => {
+      sessionModal?.close();
+    });
+
+    // Info Modal Handlers
+    headerInfoBtn?.addEventListener('click', () => {
+      infoModal?.showModal();
+    });
+
+    closeInfoModalBtn?.addEventListener('click', () => {
+      infoModal?.close();
+    });
+
+    // Device Identity Initialization
+    function initDeviceIdentity() {
+      localDevice = detectDevice();
       localDeviceNameEl.textContent = localDevice.deviceName;
-      localDeviceIconEl.textContent = getDeviceIcon(localDevice.deviceType);
+    }
+
+    // Device Name Editing - Validates and Accepts "Swaraj's MacBook", etc.
+    editDeviceNameBtn.addEventListener('click', () => {
+      customDeviceNameInput.value = localDevice.deviceName;
+      deviceNameError.style.display = 'none';
+      editNameModal.showModal();
+      customDeviceNameInput.focus();
+    });
+
+    cancelEditNameBtn.addEventListener('click', () => {
+      editNameModal.close();
+    });
+
+    closeEditNameModalBtn.addEventListener('click', () => {
+      editNameModal.close();
+    });
+
+    saveEditNameBtn.addEventListener('click', () => {
+      const trimmed = customDeviceNameInput.value.trim();
+      const validation = validateDeviceNameResult(trimmed);
+      if (!validation.valid) {
+        deviceNameError.textContent = validation.error || 'Invalid device name.';
+        deviceNameError.style.display = 'block';
+        return;
+      }
+
+      saveCustomDeviceName(validation.name);
+      localDevice = detectDevice();
+      localDeviceNameEl.textContent = localDevice.deviceName;
+      editNameModal.close();
+
+      if (signaling && signaling.isConnected()) {
+        signaling.updatePresence(localDevice.deviceName, localDevice.deviceType);
+      }
+      showToast('Device name updated');
+    });
+
+    // ==========================================================
+    // RADAR INTERACTION FLOW: DISCOVER -> SELECT DEVICE -> SHARE
+    // ==========================================================
+
+    function selectDevice(dev: DiscoveredDevice) {
+      selectedDevice = dev;
+
+      // 1. Visually highlight on the Radar
+      document.querySelectorAll('.radar-device-node').forEach((el) => {
+        el.classList.remove('selected');
+      });
+      const matchNode = Array.from(radarNodesLayer.querySelectorAll('.radar-device-node')).find((el) =>
+        el.getAttribute('aria-label')?.includes(dev.deviceName)
+      );
+      if (matchNode) matchNode.classList.add('selected');
+
+      // 2. Populate Target Device Banner
+      remotePeerNameEl.textContent = dev.deviceName;
+      selectedTargetIconEl.innerHTML = getDeviceIconSvg(dev.deviceType);
+
+      // 3. Reveal the Sharing Controls Overlay
+      selectedSharingOverlay.style.display = 'flex';
+
+      // 4. Check WebRTC connection state with this target
+      if (webrtc && webrtc.isConnected() && connectedPeer && (connectedPeer.deviceName === dev.deviceName || connectedPeer.id === dev.deviceId)) {
+        updateConnectionStateUI('connected', 'direct');
+      } else {
+        updateConnectionStateUI('connecting', 'unknown');
+
+        // Cleanly reset any old connection if we were in a session with another peer
+        if (currentSessionId && (!connectedPeer || connectedPeer.deviceName !== dev.deviceName)) {
+          signaling.leaveSession(currentSessionId);
+          currentSessionId = '';
+          connectedPeer = null;
+          webrtc.close();
+        }
+
+        // Initiate WebRTC pairing via signaling
+        signaling.requestPairing(dev.deviceId, localDevice.deviceName, localDevice.deviceType);
+      }
+    }
+
+    // "← Choose another device" handler: returns cleanly to Radar
+    backToRadarBtn.addEventListener('click', () => {
+      selectedDevice = null;
+      document.querySelectorAll('.radar-device-node').forEach((el) => {
+        el.classList.remove('selected');
+      });
+      selectedSharingOverlay.style.display = 'none';
+    });
+
+    // "Retry connection" handler: re-attempts pairing with selected device
+    retryConnectionBtn?.addEventListener('click', () => {
+      if (selectedDevice) {
+        selectDevice(selectedDevice);
+      }
+    });
+
+    // Close overlay on backdrop click outside the card
+    selectedSharingOverlay.addEventListener('click', (e) => {
+      if (e.target === selectedSharingOverlay) {
+        selectedDevice = null;
+        document.querySelectorAll('.radar-device-node').forEach((el) => {
+          el.classList.remove('selected');
+        });
+        selectedSharingOverlay.style.display = 'none';
+      }
+    });
+
+    // Render Discovered Devices in the Vast Radar Expanse (Matching Picture 1)
+    function renderDiscoveredDevices() {
+      const list = Array.from(discoveredDevices.values()).filter((d) => d.deviceId !== localDevice.deviceId);
+      const count = list.length;
+
+      if (count === 0) {
+        discoveryStatusText.textContent = 'Looking for nearby SlingShare devices...';
+        radarNodesLayer.innerHTML = '';
+        discoveredItemsList.innerHTML = '<div class="empty-list-state">No other SlingShare devices found right now.</div>';
+        return;
+      }
+
+      // Calm sky prompt matching reference image Picture 1
+      discoveryStatusText.textContent = 'Click to send files or right click to send a message and paste an image';
+
+      // 1. Render Radar Nodes (Plotting in upper semi-circle sector above bottom center)
+      radarNodesLayer.innerHTML = '';
+      
+      list.forEach((dev, index) => {
+        let angleDeg = -90;
+        let radiusPct = 52;
+
+        if (count === 1) {
+          angleDeg = -90;
+          radiusPct = 52;
+        } else if (count === 2) {
+          angleDeg = index === 0 ? -120 : -60;
+          radiusPct = 52;
+        } else if (count === 3) {
+          angleDeg = index === 0 ? -135 : index === 1 ? -90 : -45;
+          radiusPct = 52;
+        } else {
+          const minAngle = -140;
+          const maxAngle = -40;
+          const step = (maxAngle - minAngle) / (count - 1);
+          angleDeg = minAngle + index * step;
+          radiusPct = index % 2 === 0 ? 54 : 46;
+        }
+
+        const angleRad = (angleDeg * Math.PI) / 180;
+        // Origin is bottom center: (50%, 96%)
+        const x = 50 + (radiusPct * 0.78) * Math.cos(angleRad);
+        const y = 96 + (radiusPct * 0.92) * Math.sin(angleRad);
+
+        const node = document.createElement('button');
+        node.className = 'radar-device-node';
+        node.type = 'button';
+        node.style.left = `${x.toFixed(2)}%`;
+        node.style.top = `${y.toFixed(2)}%`;
+        node.setAttribute('aria-label', `Connect to ${dev.deviceName}`);
+        node.title = `${dev.deviceName} (${dev.deviceType}) — Click to pair`;
+
+        if (selectedDevice && selectedDevice.deviceId === dev.deviceId) {
+          node.classList.add('selected');
+        }
+
+        // Circular electric blue bubble
+        const bubble = document.createElement('div');
+        bubble.className = 'radar-node-bubble';
+
+        const iconEl = document.createElement('span');
+        iconEl.className = 'radar-node-icon';
+        iconEl.innerHTML = getDeviceIconSvg(dev.deviceType);
+        bubble.appendChild(iconEl);
+
+        // Text group directly under bubble (Clean, centered text without white box)
+        const textGroup = document.createElement('div');
+        textGroup.className = 'radar-node-text-group';
+
+        const labelEl = document.createElement('span');
+        labelEl.className = 'radar-node-label';
+        labelEl.textContent = dev.deviceName;
+
+        const typeEl = document.createElement('span');
+        typeEl.className = 'radar-node-type';
+        typeEl.textContent = formatDeviceTypeLabel(dev.deviceType);
+
+        textGroup.appendChild(labelEl);
+        textGroup.appendChild(typeEl);
+
+        node.appendChild(bubble);
+        node.appendChild(textGroup);
+
+        // Click handler: initiates pairing & reveals sharing card
+        node.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          selectDevice(dev);
+        });
+
+        radarNodesLayer.appendChild(node);
+      });
+
+      // 2. Render List View Fallback
+      discoveredItemsList.innerHTML = '';
+      list.forEach((dev) => {
+        const item = document.createElement('div');
+        item.className = 'discovered-list-item card';
+
+        const info = document.createElement('div');
+        info.className = 'discovered-item-info';
+
+        const icon = document.createElement('span');
+        icon.className = 'discovered-item-icon';
+        icon.innerHTML = getDeviceIconSvg(dev.deviceType);
+
+        const textGroup = document.createElement('div');
+        const name = document.createElement('strong');
+        name.textContent = dev.deviceName;
+        const sub = document.createElement('span');
+        sub.className = 'discovered-item-sub';
+        sub.textContent = `${formatDeviceTypeLabel(dev.deviceType)} • Available`;
+
+        textGroup.appendChild(name);
+        textGroup.appendChild(sub);
+        info.appendChild(icon);
+        info.appendChild(textGroup);
+
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-primary btn-sm';
+        btn.textContent = 'Connect';
+        btn.addEventListener('click', () => {
+          selectDevice(dev);
+        });
+
+        item.appendChild(info);
+        item.appendChild(btn);
+        discoveredItemsList.appendChild(item);
+      });
+    }
+
+    // View toggle handlers
+    viewRadarBtn.addEventListener('click', () => {
+      currentViewMode = 'radar';
+      viewRadarBtn.classList.add('active');
+      viewListBtn.classList.remove('active');
+      radarViewport.style.display = 'flex';
+      discoveryListContainer.style.display = 'none';
+    });
+
+    viewListBtn.addEventListener('click', () => {
+      currentViewMode = 'list';
+      viewListBtn.classList.add('active');
+      viewRadarBtn.classList.remove('active');
+      radarViewport.style.display = 'none';
+      discoveryListContainer.style.display = 'block';
+    });
+
+    function updateConnectionStateUI(state: 'connected' | 'connecting' | 'disconnected', type: string = 'direct') {
+      const isConn = state === 'connected';
+      const targetName = selectedDevice ? selectedDevice.deviceName : 'device';
+
+      if (isConn) {
+        statusDotEl.className = 'status-indicator connected';
+        connectionStatusTextEl.textContent = 'Connected';
+        connectionTypeBadgeEl.style.display = 'inline-flex';
+        connectionTypeBadgeEl.textContent = type === 'relayed' ? 'Relayed (TURN)' : 'Direct P2P';
+        remotePeerSubtitleEl.textContent = `${type === 'relayed' ? 'Relayed (TURN)' : 'Direct WebRTC'} • Encrypted`;
+        sendTextBtn.disabled = textShareInput.value.trim().length === 0;
+        waitingPrompt.style.display = 'none';
+        dropZone.classList.remove('disabled');
+
+        if (dropZoneTitleEl) dropZoneTitleEl.textContent = 'Send file';
+        if (dropZoneSubtitleEl) dropZoneSubtitleEl.textContent = 'Drag & drop or click to choose file';
+        if (dropZoneHintEl) dropZoneHintEl.textContent = 'Direct WebRTC DataChannel streaming';
+        if (dropZoneIconEl) dropZoneIconEl.textContent = '📤';
+        if (retryConnectionBtn) retryConnectionBtn.style.display = 'none';
+      } else if (state === 'connecting') {
+        statusDotEl.className = 'status-indicator connecting';
+        connectionStatusTextEl.textContent = 'Connecting...';
+        connectionTypeBadgeEl.style.display = 'none';
+        remotePeerSubtitleEl.textContent = `Connecting to ${targetName}...`;
+        sendTextBtn.disabled = true;
+        dropZone.classList.add('disabled');
+
+        if (dropZoneTitleEl) dropZoneTitleEl.textContent = `Connecting to ${targetName}...`;
+        if (dropZoneSubtitleEl) dropZoneSubtitleEl.textContent = 'File transfer will enable automatically once connected';
+        if (dropZoneHintEl) dropZoneHintEl.textContent = 'Negotiating WebRTC peer connection...';
+        if (dropZoneIconEl) dropZoneIconEl.textContent = '⏳';
+        if (retryConnectionBtn) retryConnectionBtn.style.display = 'none';
+      } else {
+        statusDotEl.className = 'status-indicator disconnected';
+        connectionStatusTextEl.textContent = currentSessionId ? 'Waiting for peer' : 'Ready';
+        connectionTypeBadgeEl.style.display = 'none';
+        remotePeerSubtitleEl.textContent = selectedDevice ? `Couldn't connect to ${targetName}` : 'Device disconnected';
+        sendTextBtn.disabled = true;
+        dropZone.classList.add('disabled');
+
+        if (dropZoneTitleEl) dropZoneTitleEl.textContent = selectedDevice ? `Couldn't connect to ${targetName}` : 'Device disconnected';
+        if (dropZoneSubtitleEl) dropZoneSubtitleEl.textContent = 'Click "Retry" or choose another device';
+        if (dropZoneHintEl) dropZoneHintEl.textContent = 'WebRTC DataChannel closed';
+        if (dropZoneIconEl) dropZoneIconEl.textContent = '⚠️';
+        if (retryConnectionBtn && selectedDevice) retryConnectionBtn.style.display = 'inline-flex';
+      }
     }
 
     // Initialize WebRTC & Transfer Managers
@@ -335,28 +973,29 @@ const appStructuredData = getSoftwareApplicationSchema();
       webrtc = new WebRTCManager([], {
         onConnectionStateChange: (state, type) => {
           if (state === 'connected') {
-            statusDotEl.className = 'status-indicator connected';
-            connectionStatusTextEl.textContent = 'Connected';
-            connectionTypeBadgeEl.style.display = 'inline-flex';
-            connectionTypeBadgeEl.textContent = type === 'relayed' ? 'Relayed (TURN)' : 'Direct P2P';
-            waitingPrompt.style.display = 'none';
-          } else if (state === 'connecting') {
-            statusDotEl.className = 'status-indicator connecting';
-            connectionStatusTextEl.textContent = 'Connecting...';
-          } else if (state === 'reconnecting') {
-            statusDotEl.className = 'status-indicator connecting';
-            connectionStatusTextEl.textContent = 'Reconnecting...';
+            updateConnectionStateUI('connected', type);
+          } else if (state === 'connecting' || state === 'reconnecting') {
+            updateConnectionStateUI('connecting', type);
           } else {
-            statusDotEl.className = 'status-indicator disconnected';
-            connectionStatusTextEl.textContent = currentSessionId ? 'Waiting for peer' : 'Ready';
-            connectionTypeBadgeEl.style.display = 'none';
+            updateConnectionStateUI('disconnected', type);
           }
         },
 
         onDataChannelStateChange: (isOpen) => {
           if (isOpen) {
-            showToast('Direct data channel opened');
+            console.log('[app] Direct WebRTC data channel opened');
+            showToast('Direct WebRTC connection established');
+            updateConnectionStateUI('connected', 'direct');
             transferMgr.resumeInterruptedReceives();
+
+            // Auto-send any pending files if the user queued them while connecting!
+            if (pendingFilesToSend.length > 0) {
+              const toSend = [...pendingFilesToSend];
+              pendingFilesToSend = [];
+              handleFilesSelected(toSend);
+            }
+          } else {
+            updateConnectionStateUI('disconnected');
           }
         },
 
@@ -388,6 +1027,8 @@ const appStructuredData = getSoftwareApplicationSchema();
       transferMgr = new TransferManager(webrtc, {
         onTransferProgress: (state) => {
           renderTransferItem(state);
+          selectedSharingOverlay.style.display = 'flex';
+          tabFilesBtn.click();
         },
         onTransferComplete: (state) => {
           renderTransferItem(state);
@@ -397,10 +1038,8 @@ const appStructuredData = getSoftwareApplicationSchema();
           renderTransferItem(state);
           showToast(`Transfer failed: ${err}`);
         },
-        onTransferCancelled: (transferId) => {
-          const item = document.getElementById(`transfer-${transferId}`);
-          if (item) item.remove();
-          updateTransfersCount();
+        onTransferCancelled: (state) => {
+          renderTransferItem(state);
           showToast('Transfer cancelled');
         },
       });
@@ -410,8 +1049,68 @@ const appStructuredData = getSoftwareApplicationSchema();
           if (!connected && currentSessionId) {
             connectionStatusTextEl.textContent = 'Signaling offline';
           }
+          if (connected) {
+            // Register presence for Radar discovery
+            signaling.registerPresence(localDevice.deviceId, localDevice.deviceName, localDevice.deviceType);
+          }
         },
 
+        // Discovery Callbacks
+        onPresenceList: (devices) => {
+          discoveredDevices.clear();
+          devices.forEach((d) => discoveredDevices.set(d.deviceId, d));
+          renderDiscoveredDevices();
+        },
+
+        onDeviceJoined: (device) => {
+          discoveredDevices.set(device.deviceId, device);
+          renderDiscoveredDevices();
+        },
+
+        onDeviceLeft: (deviceId) => {
+          discoveredDevices.delete(deviceId);
+          renderDiscoveredDevices();
+          if (selectedDevice && selectedDevice.deviceId === deviceId) {
+            showToast(`${selectedDevice.deviceName} went offline`);
+            updateConnectionStateUI('disconnected');
+          }
+        },
+
+        onDeviceUpdated: (device) => {
+          discoveredDevices.set(device.deviceId, device);
+          renderDiscoveredDevices();
+          if (selectedDevice && selectedDevice.deviceId === device.deviceId) {
+            selectedDevice = device;
+            remotePeerNameEl.textContent = device.deviceName;
+          }
+        },
+
+        onPairingInitiated: (sessionId, targetDeviceId) => {
+          isInitiator = true;
+          currentSessionId = sessionId;
+          onJoinedSessionUI(sessionId);
+          signaling.joinSession(sessionId, localDevice.deviceName, localDevice.deviceType);
+        },
+
+        onPairingInvitation: (sessionId, fromDevice) => {
+          if (currentSessionId && currentSessionId !== sessionId) {
+            webrtc.close();
+          }
+          isInitiator = false;
+          currentSessionId = sessionId;
+          showToast(`Connecting with ${fromDevice.deviceName}...`);
+          onJoinedSessionUI(sessionId);
+          
+          // Open selected sharing card for the receiver
+          selectedDevice = fromDevice;
+          remotePeerNameEl.textContent = fromDevice.deviceName;
+          selectedTargetIconEl.innerHTML = getDeviceIconSvg(fromDevice.deviceType);
+          selectedSharingOverlay.style.display = 'flex';
+
+          signaling.joinSession(sessionId, localDevice.deviceName, localDevice.deviceType);
+        },
+
+        // Session Callbacks
         onSessionCreated: (sessionId, peerId, iceServers) => {
           currentSessionId = sessionId;
           myPeerId = peerId;
@@ -424,24 +1123,27 @@ const appStructuredData = getSoftwareApplicationSchema();
         onSessionJoined: (sessionId, peerId, peers, iceServers) => {
           currentSessionId = sessionId;
           myPeerId = peerId;
-          isInitiator = false;
           webrtc.setIceServers(iceServers);
           onJoinedSessionUI(sessionId);
 
           if (peers.length > 0) {
             const peer = peers[0];
             setConnectedPeer(peer);
-            // Non-initiator waits for offer, or if initiator left
+            // If we are initiator and the peer is already in the room, start connection!
+            if (isInitiator) {
+              console.log('[signaling] Initiator joined session with existing peer, initiating WebRTC connection to', peer.id);
+              webrtc.initiateConnection(peer.id);
+            }
           }
         },
 
         onPeerJoined: (peerId, deviceName, deviceType) => {
           const peer = { id: peerId, deviceName, deviceType };
           setConnectedPeer(peer);
-          showToast(`${deviceName} joined the session`);
+          showToast(`${deviceName} connected`);
 
-          // Initiator creates and sends WebRTC offer
           if (isInitiator) {
+            console.log('[signaling] Peer joined session, initiating WebRTC connection to', peerId);
             webrtc.initiateConnection(peerId);
           }
         },
@@ -451,6 +1153,7 @@ const appStructuredData = getSoftwareApplicationSchema();
             showToast(`${connectedPeer.deviceName} disconnected`);
             setConnectedPeer(null);
             webrtc.close();
+            updateConnectionStateUI('disconnected');
             if (currentSessionId) {
               waitingPrompt.style.display = 'block';
             }
@@ -482,15 +1185,14 @@ const appStructuredData = getSoftwareApplicationSchema();
     function setConnectedPeer(peer: { id: string; deviceName: string; deviceType: string } | null) {
       connectedPeer = peer;
       if (peer) {
-        peerBanner.style.display = 'flex';
         remotePeerNameEl.textContent = peer.deviceName;
+        if (bannerRemotePeerName) bannerRemotePeerName.textContent = peer.deviceName;
         remotePeerIconEl.textContent = getDeviceIcon(peer.deviceType);
+        selectedTargetIconEl.innerHTML = getDeviceIconSvg(peer.deviceType);
         waitingPrompt.style.display = 'none';
+        updateConnectionStateUI('connecting', 'direct');
       } else {
-        peerBanner.style.display = 'none';
-        if (currentSessionId) {
-          waitingPrompt.style.display = 'block';
-        }
+        updateConnectionStateUI('disconnected');
       }
     }
 
@@ -512,18 +1214,22 @@ const appStructuredData = getSoftwareApplicationSchema();
       waitingPrompt.style.display = 'none';
       activeSessionCodeEl.textContent = '------';
       connectedPeer = null;
+      selectedDevice = null;
       currentSessionId = '';
       webrtc.close();
       transferMgr.cleanup();
-      statusDotEl.className = 'status-indicator disconnected';
-      connectionStatusTextEl.textContent = 'Ready';
-      connectionTypeBadgeEl.style.display = 'none';
+      selectedSharingOverlay.style.display = 'none';
+      updateConnectionStateUI('disconnected');
     }
 
     // Transfers UI Rendering
     function updateTransfersCount() {
       const count = transfersList.querySelectorAll('.transfer-item').length;
-      transfersCountEl.textContent = `${count} items`;
+      transfersCountEl.textContent = `${count} active`;
+      if (headerTransfersBadge) {
+        headerTransfersBadge.textContent = `${count}`;
+        headerTransfersBadge.style.display = count > 0 ? 'inline-flex' : 'none';
+      }
       emptyTransfersState.style.display = count === 0 ? 'block' : 'none';
     }
 
@@ -531,66 +1237,210 @@ const appStructuredData = getSoftwareApplicationSchema();
       emptyTransfersState.style.display = 'none';
       let item = document.getElementById(`transfer-${state.id}`);
 
+      const isCompleted = state.status === 'completed';
+      const isFailed = state.status === 'failed' || state.status === 'cancelled';
+      const isReceiving = state.direction === 'receiving';
+      const isSending = state.direction === 'sending';
+
       if (!item) {
         item = document.createElement('div');
         item.id = `transfer-${state.id}`;
-        item.className = 'transfer-item card';
         transfersList.prepend(item);
       }
 
-      const isSending = state.direction === 'sending';
-      const directionIcon = isSending ? '↑' : '↓';
-      const directionLabel = isSending ? 'Sending' : 'Receiving';
+      if (isCompleted && isReceiving) {
+        item.className = 'transfer-item transfer-received-completed card';
+        item.innerHTML = '';
 
-      const speedStr = state.speedBytesPerSec > 0 ? `${formatBytes(state.speedBytesPerSec)}/s` : '';
-      const sizeStr = `${formatBytes(state.transferredBytes)} / ${formatBytes(state.fileSize)}`;
+        const main = document.createElement('div');
+        main.className = 'received-card-main';
 
-      let statusBadge = `<span class="badge badge-card">${state.status}</span>`;
-      if (state.status === 'completed') {
-        statusBadge = `<span class="badge badge-success"><span class="badge-dot"></span> Complete & Verified</span>`;
-      } else if (state.status === 'failed') {
-        statusBadge = `<span class="badge badge-coral" title="${state.error || ''}">Failed</span>`;
-      } else if (state.status === 'verifying') {
-        statusBadge = `<span class="badge badge-card">Verifying SHA-256...</span>`;
-      }
+        const iconWrap = document.createElement('div');
+        iconWrap.className = 'received-icon-wrapper';
+        iconWrap.setAttribute('aria-hidden', 'true');
+        iconWrap.innerHTML = getFileCategoryIconSvg(state.fileName, state.mimeType);
 
-      let actionsHtml = '';
-      if (state.status === 'completed' && state.downloadUrl) {
-        actionsHtml = `<a href="${state.downloadUrl}" download="${state.fileName}" class="btn btn-primary btn-sm">Download</a>`;
-      } else if (state.status === 'sending' || state.status === 'receiving') {
-        actionsHtml = `<button class="btn btn-secondary btn-sm cancel-transfer-btn" data-id="${state.id}">Cancel</button>`;
-      }
+        const details = document.createElement('div');
+        details.className = 'received-details';
 
-      item.innerHTML = `
-        <div class="transfer-header">
-          <div class="transfer-title-group">
-            <span class="transfer-direction-icon" aria-hidden="true">${directionIcon}</span>
-            <div class="transfer-name-size">
-              <strong class="transfer-file-name" title="${state.fileName}">${state.fileName}</strong>
-              <span class="transfer-meta-text">${directionLabel} • ${formatBytes(state.fileSize)}</span>
+        const nameEl = document.createElement('span');
+        nameEl.className = 'received-file-name';
+        nameEl.textContent = state.fileName;
+        nameEl.title = state.fileName;
+
+        const subEl = document.createElement('span');
+        subEl.className = 'received-file-sub';
+        subEl.textContent = `${formatBytes(state.fileSize)} · ${getFileExtension(state.fileName)}`;
+
+        details.appendChild(nameEl);
+        details.appendChild(subEl);
+        main.appendChild(iconWrap);
+        main.appendChild(details);
+
+        const actions = document.createElement('div');
+        actions.className = 'received-actions';
+
+        const badge = document.createElement('span');
+        badge.className = 'badge badge-success';
+        badge.textContent = 'Complete & Verified';
+        actions.appendChild(badge);
+
+        const dlLink = document.createElement('a');
+        dlLink.className = 'btn-download';
+        dlLink.setAttribute('role', 'button');
+        dlLink.setAttribute('aria-label', `Download ${state.fileName}`);
+        dlLink.title = `Download ${state.fileName}`;
+
+        // Ensure object URL exists
+        let dlUrl = state.downloadUrl;
+        if (!dlUrl && state.blob) {
+          dlUrl = URL.createObjectURL(state.blob);
+          state.downloadUrl = dlUrl;
+        }
+        if (dlUrl) {
+          dlLink.href = dlUrl;
+          dlLink.download = state.fileName;
+        }
+
+        dlLink.innerHTML = `
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>Download</span>
+        `;
+
+        // Direct click fallback to ensure browser download always triggers reliably
+        dlLink.addEventListener('click', (e) => {
+          if (!dlLink.getAttribute('href') || dlLink.getAttribute('href') === '#') {
+            e.preventDefault();
+            if (state.blob) {
+              const u = URL.createObjectURL(state.blob);
+              state.downloadUrl = u;
+              dlLink.href = u;
+              const a = document.createElement('a');
+              a.href = u;
+              a.download = state.fileName;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }
+          }
+          showToast(`Downloading ${state.fileName}...`);
+        });
+
+        actions.appendChild(dlLink);
+        item.appendChild(main);
+        item.appendChild(actions);
+
+      } else if (isCompleted && isSending) {
+        item.className = 'transfer-item transfer-sent-completed card';
+        item.innerHTML = '';
+
+        const main = document.createElement('div');
+        main.className = 'received-card-main';
+
+        const iconWrap = document.createElement('div');
+        iconWrap.className = 'received-icon-wrapper';
+        iconWrap.setAttribute('aria-hidden', 'true');
+        iconWrap.innerHTML = getFileCategoryIconSvg(state.fileName, state.mimeType);
+
+        const details = document.createElement('div');
+        details.className = 'received-details';
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'received-file-name';
+        nameEl.textContent = state.fileName;
+        nameEl.title = state.fileName;
+
+        const subEl = document.createElement('span');
+        subEl.className = 'received-file-sub';
+        subEl.textContent = `${formatBytes(state.fileSize)} · ${getFileExtension(state.fileName)}`;
+
+        details.appendChild(nameEl);
+        details.appendChild(subEl);
+        main.appendChild(iconWrap);
+        main.appendChild(details);
+
+        const actions = document.createElement('div');
+        actions.className = 'received-actions';
+
+        const badge = document.createElement('span');
+        badge.className = 'badge badge-success';
+        badge.textContent = 'Complete & Verified';
+        actions.appendChild(badge);
+
+        item.appendChild(main);
+        item.appendChild(actions);
+
+      } else if (isFailed) {
+        item.className = 'transfer-item transfer-failed card';
+        item.innerHTML = '';
+
+        const main = document.createElement('div');
+        main.className = 'received-card-main';
+
+        const iconWrap = document.createElement('div');
+        iconWrap.className = 'received-icon-wrapper error';
+        iconWrap.setAttribute('aria-hidden', 'true');
+        iconWrap.textContent = '⚠️';
+
+        const details = document.createElement('div');
+        details.className = 'received-details';
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'received-file-name';
+        nameEl.textContent = state.fileName;
+        nameEl.title = state.fileName;
+
+        const subEl = document.createElement('span');
+        subEl.className = 'received-file-sub text-error';
+        const isIntegrity = state.error?.includes('Integrity') || (state.status === 'failed' && state.sha256Expected && state.sha256Actual && state.sha256Expected !== state.sha256Actual);
+        subEl.textContent = isIntegrity ? "Couldn't verify file" : (state.error || 'Transfer failed');
+
+        details.appendChild(nameEl);
+        details.appendChild(subEl);
+        main.appendChild(iconWrap);
+        main.appendChild(details);
+
+        const actions = document.createElement('div');
+        actions.className = 'received-actions';
+
+        const badge = document.createElement('span');
+        badge.className = 'badge badge-error';
+        badge.textContent = isIntegrity ? 'Verification Failed' : (state.status === 'cancelled' ? 'Cancelled' : 'Failed');
+        actions.appendChild(badge);
+
+        item.appendChild(main);
+        item.appendChild(actions);
+
+      } else {
+        // In-progress transfer (sending, receiving, or verifying)
+        item.className = 'transfer-item transfer-in-progress card';
+
+        const pct = Math.max(0, Math.min(100, state.progressPercent || 0));
+        const statusLabel = state.status === 'verifying'
+          ? 'Verifying integrity (SHA-256)...'
+          : `${isSending ? 'Sending' : 'Receiving'}... ${formatBytes(state.transferredBytes || 0)} of ${formatBytes(state.fileSize || 0)} (${pct}%)`;
+
+        item.innerHTML = `
+          <div class="transfer-card-header">
+            <div class="received-icon-wrapper" aria-hidden="true">
+              ${getFileCategoryIconSvg(state.fileName, state.mimeType)}
             </div>
+            <div class="transfer-details">
+              <span class="transfer-file-name" title="${escapeHtml(state.fileName)}">${escapeHtml(state.fileName)}</span>
+              <span class="transfer-status-text">${statusLabel}</span>
+            </div>
+            <button class="btn-cancel-transfer" data-id="${state.id}" aria-label="Cancel transfer" title="Cancel">✕</button>
           </div>
-          <div class="transfer-status-group">
-            ${statusBadge}
+          <div class="progress-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-fill" style="width: ${pct}%"></div>
           </div>
-        </div>
+        `;
 
-        <div class="progress-bar-container">
-          <div class="progress-bar-fill" style="width: ${state.progressPercent}%"></div>
-        </div>
-
-        <div class="transfer-footer">
-          <span class="transfer-stats-text">${sizeStr} ${speedStr ? '• ' + speedStr : ''}</span>
-          <div class="transfer-actions">
-            ${actionsHtml}
-          </div>
-        </div>
-      `;
-
-      // Attach cancel listener
-      const cancelBtn = item.querySelector('.cancel-transfer-btn');
-      if (cancelBtn) {
-        cancelBtn.addEventListener('click', () => {
+        item.querySelector('.btn-cancel-transfer')?.addEventListener('click', () => {
           transferMgr.cancelTransfer(state.id);
         });
       }
@@ -598,86 +1448,193 @@ const appStructuredData = getSoftwareApplicationSchema();
       updateTransfersCount();
     }
 
-    // Text & Snippet Sharing
-    function handleReceivedText(msg: { text: string; senderName: string; timestamp: number }) {
-      emptyMessagesState.style.display = 'none';
-      clearMessagesBtn.style.display = 'inline-block';
+    // ==========================================================
+    // FILE TRANSFER IMPLEMENTATION
+    // ==========================================================
 
-      const item = document.createElement('div');
-      item.className = 'message-item card';
+    dropZone.addEventListener('click', () => {
+      if (dropZone.classList.contains('disabled') || !webrtc.isConnected()) {
+        const targetName = selectedDevice ? selectedDevice.deviceName : 'device';
+        showToast(`Connecting to ${targetName}... File upload will be available once connected.`);
+        return;
+      }
+      fileInput.click();
+    });
 
-      const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files.length > 0) {
+        handleFilesSelected(Array.from(fileInput.files));
+        fileInput.value = '';
+      }
+    });
 
-      // Linkify URLs
-      const safeText = msg.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const urlPattern = /(https?:\/\/[^\s]+)/g;
-      const linkified = safeText.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-
-      item.innerHTML = `
-        <div class="message-header">
-          <div class="message-sender">
-            <strong>${msg.senderName}</strong>
-            <span class="message-time">${timeStr}</span>
-          </div>
-          <button class="btn btn-secondary btn-sm copy-msg-btn">Copy</button>
-        </div>
-        <div class="message-body">${linkified}</div>
-      `;
-
-      const copyBtn = item.querySelector('.copy-msg-btn') as HTMLButtonElement;
-      copyBtn.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(msg.text);
-          copyBtn.textContent = 'Copied!';
-          setTimeout(() => (copyBtn.textContent = 'Copy'), 1500);
-          showToast('Text copied to clipboard');
-        } catch (e) {
-          showToast('Could not copy automatically');
-        }
+    // Window-wide drag & drop into radar or drop zone
+    ['dragenter', 'dragover'].forEach((eventName) => {
+      window.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-active');
       });
+    });
 
-      messagesList.prepend(item);
-      showToast(`Text received from ${msg.senderName}`);
-    }
+    ['dragleave', 'drop'].forEach((eventName) => {
+      window.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-active');
+      });
+    });
 
-    function sendTextContent() {
-      const text = textShareInput.value.trim();
-      if (!text) return;
+    window.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+        handleFilesSelected(Array.from(e.dataTransfer.files));
+        selectedSharingOverlay.style.display = 'flex';
+        tabFilesBtn.click();
+      }
+    });
 
-      if (!webrtc.isChannelOpen()) {
-        showToast('Connect with a peer first before sending text');
+    function handleFilesSelected(files: File[]) {
+      if (!files || files.length === 0) return;
+
+      if (!webrtc.isConnected()) {
+        pendingFilesToSend = files;
+        const targetName = selectedDevice ? selectedDevice.deviceName : 'device';
+        showToast(`Connecting to ${targetName}... File will send automatically once connected.`);
         return;
       }
 
-      const msg = {
-        type: 'text' as const,
-        id: Math.random().toString(36).substring(2),
-        text,
-        timestamp: Date.now(),
-        senderName: localDevice.deviceName,
-      };
+      for (const file of files) {
+        transferMgr.sendFile(file).then((transferId) => {
+          showToast(`Sending ${file.name}...`);
+        }).catch((err) => {
+          showToast(`Transfer error: ${err.message}`);
+        });
+      }
+    }
 
-      const sent = webrtc.sendJson(msg);
+    // ==========================================================
+    // TEXT & CLIPBOARD SHARING IMPLEMENTATION
+    // ==========================================================
+
+    textShareInput.addEventListener('input', () => {
+      const len = textShareInput.value.length;
+      textCharCountEl.textContent = `${len} character${len === 1 ? '' : 's'}`;
+      sendTextBtn.disabled = textShareInput.value.trim().length === 0 || !webrtc.isConnected();
+    });
+
+    function doSendText() {
+      const text = textShareInput.value;
+      if (!text || text.trim().length === 0) return;
+
+      if (!webrtc.isConnected()) {
+        showToast('Connecting with device... please wait.');
+        return;
+      }
+
+      const sent = webrtc.sendTextMessage(text, localDevice.deviceName);
       if (sent) {
-        // Also add to local view
-        handleReceivedText({ text, senderName: 'You', timestamp: Date.now() });
+        appendMessage(text, 'sent', localDevice.deviceName);
         textShareInput.value = '';
         textCharCountEl.textContent = '0 characters';
         sendTextBtn.disabled = true;
       } else {
-        showToast('Failed to send text. Data channel not ready.');
+        showToast('Could not send message. Please check connection.');
       }
     }
 
-    // Event Listeners
+    sendTextBtn.addEventListener('click', doSendText);
+
+    textShareInput.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        doSendText();
+      }
+    });
+
+    pasteClipboardBtn.addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          textShareInput.value = text;
+          textShareInput.dispatchEvent(new Event('input'));
+          showToast('Pasted from clipboard');
+        }
+      } catch (err) {
+        showToast('Could not access clipboard. Please paste manually.');
+      }
+    });
+
+    function handleReceivedText(msg: any) {
+      let text = '';
+      if (typeof msg.text === 'string') {
+        text = msg.text;
+      } else if (msg.payload && typeof msg.payload.text === 'string') {
+        text = msg.payload.text;
+      } else if (typeof msg.payload === 'string') {
+        text = msg.payload;
+      }
+      if (!text) return;
+
+      const sender = msg.senderName || (connectedPeer ? connectedPeer.deviceName : 'Remote Peer');
+      appendMessage(text, 'received', sender);
+      showToast(`Text received from ${sender}`);
+      // Reveal text tab so receiver sees snippet immediately
+      selectedSharingOverlay.style.display = 'flex';
+      tabTextBtn.click();
+    }
+
+    function appendMessage(text: string, direction: 'sent' | 'received', senderName: string) {
+      emptyMessagesState.style.display = 'none';
+      messagesHeaderRow.style.display = 'flex';
+
+      const item = document.createElement('div');
+      item.className = `message-item message-${direction} card`;
+
+      const header = document.createElement('div');
+      header.className = 'message-header';
+      const sender = document.createElement('strong');
+      sender.textContent = direction === 'sent' ? 'You' : senderName;
+      const time = document.createElement('span');
+      time.className = 'message-time';
+      time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      header.appendChild(sender);
+      header.appendChild(time);
+
+      const body = document.createElement('div');
+      body.className = 'message-body';
+      body.textContent = text; // Safe text insertion, preserves emojis & newlines without HTML execution
+
+      const actions = document.createElement('div');
+      actions.className = 'message-actions';
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'btn-text-action';
+      copyBtn.textContent = 'Copy';
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard'));
+      });
+      actions.appendChild(copyBtn);
+
+      item.appendChild(header);
+      item.appendChild(body);
+      item.appendChild(actions);
+
+      messagesList.appendChild(item);
+      messagesList.scrollTop = messagesList.scrollHeight;
+    }
+
+    clearMessagesBtn.addEventListener('click', () => {
+      messagesList.innerHTML = '';
+      emptyMessagesState.style.display = 'block';
+      messagesHeaderRow.style.display = 'none';
+    });
+
+    // Session Management Actions
     createSessionBtn.addEventListener('click', () => {
       if (!signaling.isConnected()) {
-        signaling.connect().then(() => {
-          signaling.createSession(localDevice.deviceName, localDevice.deviceType);
-        });
-      } else {
-        signaling.createSession(localDevice.deviceName, localDevice.deviceType);
+        showToast('Connecting to signaling server...');
+        return;
       }
+      signaling.createSession(localDevice.deviceName, localDevice.deviceType);
     });
 
     joinSessionBtn.addEventListener('click', () => {
@@ -687,82 +1644,87 @@ const appStructuredData = getSoftwareApplicationSchema();
         return;
       }
       if (!signaling.isConnected()) {
-        signaling.connect().then(() => {
-          signaling.joinSession(code, localDevice.deviceName, localDevice.deviceType);
+        showToast('Connecting to signaling server...');
+        return;
+      }
+      isInitiator = false;
+      signaling.joinSession(code, localDevice.deviceName, localDevice.deviceType);
+    });
+
+    copyCodeBtn.addEventListener('click', () => {
+      if (currentSessionId) {
+        navigator.clipboard.writeText(currentSessionId).then(() => {
+          showToast(`Room code ${currentSessionId} copied`);
         });
-      } else {
-        signaling.joinSession(code, localDevice.deviceName, localDevice.deviceType);
       }
     });
 
-    joinCodeInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        joinSessionBtn.click();
-      }
+    showQrBtn.addEventListener('click', () => {
+      openQrModal();
+    });
+
+    waitingPromptQrBtn.addEventListener('click', () => {
+      openQrModal();
     });
 
     leaveSessionBtn.addEventListener('click', () => {
-      signaling.leaveSession();
+      if (signaling && currentSessionId) {
+        signaling.leaveSession(currentSessionId);
+      }
       onLeftSessionUI();
       showToast('Left session');
     });
 
-    copyCodeBtn.addEventListener('click', async () => {
-      if (currentSessionId) {
-        await navigator.clipboard.writeText(currentSessionId);
-        showToast(`Copied room code: ${currentSessionId}`);
+    modalLeaveSessionBtn?.addEventListener('click', () => {
+      if (signaling && currentSessionId) {
+        signaling.leaveSession(currentSessionId);
       }
+      onLeftSessionUI();
+      sessionModal?.close();
+      showToast('Left session');
     });
 
-    showQrBtn.addEventListener('click', openQrModal);
-    waitingPromptQrBtn.addEventListener('click', openQrModal);
-
+    // QR Code Modal
     function openQrModal() {
       if (!currentSessionId) return;
-      const joinUrl = `${window.location.origin}/app?join=${currentSessionId}`;
-      shareUrlInput.value = joinUrl;
+      const shareUrl = `${window.location.origin}/app?join=${currentSessionId}`;
+      shareUrlInput.value = shareUrl;
 
-      QRCode.toCanvas(qrCanvas, joinUrl, {
-        width: 240,
-        margin: 2,
-        color: {
-          dark: '#141413',
-          light: '#faf9f5',
+      QRCode.toCanvas(
+        qrCanvas,
+        shareUrl,
+        {
+          width: 220,
+          margin: 2,
+          color: {
+            dark: '#141413',
+            light: '#ffffff',
+          },
         },
-      });
+        (err) => {
+          if (err) console.error('QR generation error:', err);
+        }
+      );
 
       qrModal.showModal();
     }
 
-    closeQrModalBtn.addEventListener('click', () => qrModal.close());
-    copyShareUrlBtn.addEventListener('click', async () => {
-      await navigator.clipboard.writeText(shareUrlInput.value);
-      showToast('Share link copied to clipboard');
+    closeQrModalBtn.addEventListener('click', () => {
+      qrModal.close();
     });
 
-    // Edit Device Name
-    editDeviceNameBtn.addEventListener('click', () => {
-      customDeviceNameInput.value = localDevice.deviceName;
-      editNameModal.showModal();
+    copyShareUrlBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(shareUrlInput.value).then(() => {
+        showToast('Pairing link copied to clipboard');
+      });
     });
 
-    closeEditNameModalBtn.addEventListener('click', () => editNameModal.close());
-    cancelEditNameBtn.addEventListener('click', () => editNameModal.close());
-
-    saveEditNameBtn.addEventListener('click', () => {
-      const updated = saveCustomDeviceName(customDeviceNameInput.value);
-      if (updated) {
-        localDevice.deviceName = updated;
-        updateLocalDeviceDisplay();
-        showToast(`Device name updated to: ${updated}`);
-      }
-      editNameModal.close();
-    });
-
-    // Tabs switching
+    // Mode Tabs Navigation: [ File ] vs [ Text ]
     tabFilesBtn.addEventListener('click', () => {
       tabFilesBtn.classList.add('active');
       tabTextBtn.classList.remove('active');
+      tabFilesBtn.setAttribute('aria-selected', 'true');
+      tabTextBtn.setAttribute('aria-selected', 'false');
       panelFiles.style.display = 'block';
       panelText.style.display = 'none';
     });
@@ -770,544 +1732,1008 @@ const appStructuredData = getSoftwareApplicationSchema();
     tabTextBtn.addEventListener('click', () => {
       tabTextBtn.classList.add('active');
       tabFilesBtn.classList.remove('active');
-      panelFiles.style.display = 'none';
+      tabTextBtn.setAttribute('aria-selected', 'true');
+      tabFilesBtn.setAttribute('aria-selected', 'false');
       panelText.style.display = 'block';
+      panelFiles.style.display = 'none';
+      textShareInput.focus();
     });
 
-    // File Drag and Drop
-    dropZone.addEventListener('click', () => fileInput.click());
-
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('drag-over');
-    });
-
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('drag-over');
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('drag-over');
-      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-        handleSelectedFiles(Array.from(e.dataTransfer.files));
+    headerWorkspaceToggleBtn?.addEventListener('click', () => {
+      if (selectedDevice || connectedPeer) {
+        const isShown = selectedSharingOverlay.style.display === 'flex';
+        selectedSharingOverlay.style.display = isShown ? 'none' : 'flex';
+      } else {
+        showToast('Click a device on the Radar to start sharing.');
       }
     });
 
-    fileInput.addEventListener('change', () => {
-      if (fileInput.files && fileInput.files.length > 0) {
-        handleSelectedFiles(Array.from(fileInput.files));
-        fileInput.value = '';
-      }
-    });
-
-    function handleSelectedFiles(files: File[]) {
-      if (!webrtc.isChannelOpen()) {
-        showToast('Please connect to a device first before sending files');
-        return;
-      }
-
-      for (const file of files) {
-        transferMgr.sendFile(file).catch((err) => {
-          showToast(`Error sending ${file.name}: ${err.message}`);
-        });
+    // Check URL parameters for auto-joining (?join=ROOM)
+    function checkUrlJoinParam() {
+      const params = new URLSearchParams(window.location.search);
+      const joinCode = params.get('join');
+      if (joinCode) {
+        const cleanCode = joinCode.trim().toUpperCase();
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setTimeout(() => {
+          if (signaling.isConnected()) {
+            isInitiator = false;
+            signaling.joinSession(cleanCode, localDevice.deviceName, localDevice.deviceType);
+          }
+        }, 600);
       }
     }
 
-    // Text Sharing Actions
-    textShareInput.addEventListener('input', () => {
-      const len = textShareInput.value.length;
-      textCharCountEl.textContent = `${len} character${len === 1 ? '' : 's'}`;
-      sendTextBtn.disabled = len === 0;
-    });
-
-    sendTextBtn.addEventListener('click', sendTextContent);
-
-    pasteClipboardBtn.addEventListener('click', async () => {
-      try {
-        const text = await navigator.clipboard.readText();
-        if (text) {
-          textShareInput.value = text;
-          const len = text.length;
-          textCharCountEl.textContent = `${len} characters`;
-          sendTextBtn.disabled = false;
-          showToast('Clipboard content pasted');
-        } else {
-          showToast('Clipboard is empty');
-        }
-      } catch (e) {
-        showToast('Clipboard permission required or not supported by browser');
-      }
-    });
-
-    clearMessagesBtn.addEventListener('click', () => {
-      messagesList.innerHTML = '<div class="empty-state" id="emptyMessagesState">No shared text yet.</div>';
-      clearMessagesBtn.style.display = 'none';
-    });
-
-    // Initialize Page
-    updateLocalDeviceDisplay();
+    // Startup Execution
+    initDeviceIdentity();
     initNetworking();
-
-    // Check URL parameters for direct join: ?join=XXXXXX
-    const urlParams = new URLSearchParams(window.location.search);
-    const joinCode = urlParams.get('join');
-    if (joinCode) {
-      joinCodeInput.value = joinCode.toUpperCase();
-      setTimeout(() => {
-        joinSessionBtn.click();
-      }, 500);
-    }
+    checkUrlJoinParam();
   </script>
 </Layout>
 
-<style>
-  .app-page {
-    padding: var(--spacing-xl) 0 var(--spacing-xxl);
-    min-height: 80vh;
-  }
+<style is:global>
+  /* =========================================================
+     GLOBAL RADAR & APP STYLES (MATCHING VISUAL REFERENCE PICTURE 1)
+     ========================================================= */
 
-  .app-container {
-    max-width: 900px;
+  .app-viewport {
+    width: 100%;
+    min-height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
-  }
-
-  /* Top Device & Session Bar */
-  .device-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--spacing-lg);
-    gap: var(--spacing-lg);
-    flex-wrap: wrap;
-  }
-
-  .device-info {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-  }
-
-  .device-icon {
-    font-size: 2rem;
-    line-height: 1;
-  }
-
-  .device-name-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 1rem;
-    color: var(--color-ink);
-  }
-
-  .device-label {
-    color: var(--color-muted);
-    font-size: 0.875rem;
-  }
-
-  .btn-text-action {
-    background: none;
-    border: none;
-    color: var(--color-muted);
-    cursor: pointer;
-    font-size: 0.95rem;
-    padding: 2px 4px;
-    border-radius: var(--radius-xs);
-  }
-
-  .btn-text-action:hover {
-    color: var(--color-primary);
-  }
-
-  .connection-status-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.85rem;
-    color: var(--color-muted);
-    margin-top: 4px;
-  }
-
-  .status-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-  }
-
-  .status-indicator.connected {
-    background-color: var(--color-success);
-    box-shadow: 0 0 0 2px rgba(93, 184, 114, 0.25);
-  }
-
-  .status-indicator.connecting {
-    background-color: var(--color-warning);
-    box-shadow: 0 0 0 2px rgba(212, 160, 23, 0.25);
-  }
-
-  .status-indicator.disconnected {
-    background-color: var(--color-muted-soft);
-  }
-
-  .session-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-  }
-
-  .session-entry-group {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    flex-wrap: wrap;
-  }
-
-  .join-inline-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .join-input {
-    width: 110px;
-    text-transform: uppercase;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-align: center;
-  }
-
-  .session-active-group {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    flex-wrap: wrap;
-  }
-
-  .session-code-display {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    position: relative;
     background-color: var(--color-canvas);
-    border: 1px solid var(--color-hairline);
-    padding: 4px 10px;
-    border-radius: var(--radius-md);
+    overflow: hidden;
   }
 
-  .session-code-label {
-    font-size: 0.8rem;
+  /* ---------------------------------------------------------
+     Dominant Radar Surface
+     --------------------------------------------------------- */
+  .radar-surface {
+    flex: 1;
+    width: 100%;
+    min-height: calc(100vh - 60px);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    overflow: hidden;
+  }
+
+  .radar-canvas {
+    width: 100%;
+    height: calc(100vh - 60px);
+    min-height: 520px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 100%, rgba(37, 99, 235, 0.04) 0%, transparent 65%);
+  }
+
+  /* ---------------------------------------------------------
+     Concentric Radar Arcs anchored at bottom center (50%, 100%)
+     --------------------------------------------------------- */
+  .radar-arcs-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .radar-arc {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    border-radius: 50%;
+    border: 1px solid var(--radar-arc-color);
+    pointer-events: none;
+  }
+
+  .radar-arc-1 { width: 320px; height: 320px; }
+  .radar-arc-2 { width: 620px; height: 620px; }
+  .radar-arc-3 { width: 960px; height: 960px; }
+  .radar-arc-4 { width: 1340px; height: 1340px; }
+  .radar-arc-5 { width: 1760px; height: 1760px; }
+  .radar-arc-6 { width: 2220px; height: 2220px; }
+  .radar-arc-7 { width: 2720px; height: 2720px; }
+  .radar-arc-8 { width: 3260px; height: 3260px; }
+
+  /* Very subtle ambient sweep - no harsh spotlight lines */
+  .radar-scan-sweep {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 2800px;
+    height: 2800px;
+    transform: translate(-50%, 50%);
+    border-radius: 50%;
+    pointer-events: none;
+    background: conic-gradient(
+      from 180deg at 50% 50%,
+      transparent 0deg,
+      rgba(37, 99, 235, 0.04) 15deg,
+      transparent 20deg
+    );
+    animation: radarScanSweep 12s linear infinite;
+    opacity: 0.7;
+  }
+
+  @keyframes radarScanSweep {
+    0% {
+      transform: translate(-50%, 50%) rotate(0deg);
+    }
+    100% {
+      transform: translate(-50%, 50%) rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .radar-scan-sweep {
+      animation: none;
+      opacity: 0;
+    }
+  }
+
+  /* ---------------------------------------------------------
+     Upper Sky Calm Field Prompt (Matching Picture 1)
+     --------------------------------------------------------- */
+  .radar-field-prompt {
+    position: absolute;
+    top: 18%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    max-width: 600px;
+    padding: 0 var(--spacing-md);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .radar-sky-hint {
+    font-size: 0.875rem;
     color: var(--color-muted);
+    letter-spacing: -0.2px;
+    line-height: 1.4;
+    text-align: center;
+    opacity: 0.85;
   }
 
-  .session-code-value {
-    font-family: var(--font-mono);
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: var(--color-ink);
-    letter-spacing: 1.5px;
+  /* ---------------------------------------------------------
+     Bottom-Center Transmitter Beacon (Visual Reference Picture 1)
+     --------------------------------------------------------- */
+  .radar-transmitter {
+    position: relative;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 40px;
   }
 
-  .btn-danger-hover:hover {
-    color: var(--color-error);
-    border-color: var(--color-error);
-  }
-
-  /* Peer Banner */
-  .peer-banner {
+  .radar-beacon-icon {
+    position: relative;
+    color: var(--radar-beacon-color);
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    background-color: #f7f9f6;
-    border-color: rgba(93, 184, 114, 0.4);
-    padding: var(--spacing-md) var(--spacing-lg);
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 10px;
   }
 
-  .peer-info-content {
+  .beacon-svg {
+    filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.5));
+  }
+
+  .beacon-halo {
+    position: absolute;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--radar-beacon-color) 0%, transparent 75%);
+    opacity: 0.25;
+    pointer-events: none;
+  }
+
+  .radar-transmitter-info {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: var(--spacing-md);
+    gap: 3px;
   }
 
-  .peer-icon {
-    font-size: 1.75rem;
-  }
-
-  .peer-title {
-    color: var(--color-ink);
+  .radar-self-identity {
     font-size: 0.95rem;
+    color: var(--color-ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
-  .peer-subtitle {
-    font-size: 0.8rem;
+  .self-prefix {
     color: var(--color-muted);
   }
 
-  /* Workspace Tabs */
-  .workspace-tabs {
-    display: flex;
-    gap: 8px;
-    border-bottom: 1px solid var(--color-hairline);
-    padding-bottom: 8px;
-    margin-bottom: var(--spacing-lg);
-  }
-
-  .tab-btn {
-    background: none;
+  .radar-self-name-btn {
+    background: transparent;
     border: none;
-    font-family: var(--font-sans);
+    color: var(--color-ink);
     font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 6px;
+    border-radius: var(--radius-xs);
+    transition: all 0.15s ease;
+  }
+
+  .radar-self-name-btn:hover,
+  .radar-self-name-btn:focus-visible {
+    background: var(--color-surface-soft);
+    color: var(--color-primary);
+    outline: none;
+  }
+
+  .edit-pencil-icon {
+    font-size: 0.85rem;
+    color: #38bdf8;
+  }
+
+  .radar-self-subtitle {
+    font-size: 0.8rem;
     font-weight: 500;
+    color: #38bdf8;
+    margin-top: 2px;
+  }
+
+  /* ---------------------------------------------------------
+     Discovered Floating Device Nodes (Visual Reference Picture 1)
+     --------------------------------------------------------- */
+  .radar-nodes-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    pointer-events: none;
+  }
+
+  .radar-device-node {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    pointer-events: auto !important;
+    background: transparent !important;
+    border: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+    border-radius: var(--radius-lg);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    outline: none;
+    max-width: 140px;
+    text-align: center;
+    z-index: 35;
+  }
+
+  /* Vibrant electric blue circular bubble matching Picture 1 */
+  .radar-node-bubble {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #2563eb !important;
+    color: #ffffff !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  }
+
+  .radar-node-icon {
+    font-size: 1.85rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+  }
+
+  /* Pure text group directly below bubble - NO ugly box or pill! */
+  .radar-node-text-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1px;
+    margin-top: 2px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .radar-node-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+    line-height: 1.25;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  .radar-node-type {
+    font-size: 0.775rem;
     color: var(--color-muted);
-    padding: 8px 16px;
-    border-radius: var(--radius-md);
+    line-height: 1.2;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .radar-device-node:hover .radar-node-bubble,
+  .radar-device-node:focus-visible .radar-node-bubble {
+    transform: scale(1.1);
+    box-shadow: 0 12px 32px rgba(37, 99, 235, 0.55);
+  }
+
+  .radar-device-node.selected .radar-node-bubble {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 4px var(--color-canvas), 0 0 0 8px #2563eb, 0 12px 32px rgba(37, 99, 235, 0.55);
+  }
+
+  .radar-device-node.selected .radar-node-label {
+    color: #38bdf8;
+  }
+
+  /* ---------------------------------------------------------
+     Radar Bottom Controls
+     --------------------------------------------------------- */
+  .radar-bottom-bar {
+    position: absolute;
+    bottom: 16px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    z-index: 25;
+  }
+
+  .radar-view-controls {
+    display: flex;
+    background: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-pill);
+    padding: 3px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  }
+
+  .view-toggle-btn {
+    background: transparent;
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    padding: 5px 12px;
+    border-radius: var(--radius-pill);
     cursor: pointer;
     transition: all 0.15s ease;
   }
 
-  .tab-btn:hover {
-    color: var(--color-ink);
-    background-color: var(--color-surface-soft);
+  .view-toggle-btn.active {
+    background: var(--color-primary);
+    color: #fff;
   }
 
-  .tab-btn.active {
-    color: var(--color-ink);
-    background-color: var(--color-surface-card);
-    border: 1px solid var(--color-hairline);
+  /* ---------------------------------------------------------
+     Accessible List Fallback View
+     --------------------------------------------------------- */
+  .discovery-list-container {
+    width: 100%;
+    max-width: 680px;
+    margin: var(--spacing-xl) auto;
+    padding: 0 var(--spacing-lg);
+    z-index: 10;
   }
 
-  /* Drop Zone */
-  .drop-zone {
-    border: 2px dashed var(--color-hairline);
-    border-radius: var(--radius-lg);
-    background-color: var(--color-canvas);
-    padding: var(--spacing-xxl) var(--spacing-lg);
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  .discovery-list-header {
+    margin-bottom: var(--spacing-md);
   }
 
-  .drop-zone:hover, .drop-zone.drag-over {
-    border-color: var(--color-primary);
-    background-color: rgba(204, 120, 92, 0.04);
-  }
-
-  .drop-icon {
-    font-size: 2.5rem;
-    margin-bottom: var(--spacing-xs);
-  }
-
-  .drop-zone h3 {
-    font-size: 1.25rem;
+  .discovery-list-header h3 {
+    font-size: 1.3rem;
     margin-bottom: 4px;
   }
 
-  .drop-zone p {
+  .discovery-list-header p {
+    font-size: 0.9rem;
     color: var(--color-muted);
-    font-size: 0.95rem;
   }
 
-  .drop-zone-hint {
-    display: inline-block;
-    margin-top: var(--spacing-md);
-    font-size: 0.8rem;
-    color: var(--color-muted-soft);
-    letter-spacing: 0.2px;
+  .discovered-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
   }
 
-  /* Transfers List */
-  .transfers-section {
-    margin-top: var(--spacing-xl);
-  }
-
-  .section-header-row {
+  .discovered-list-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .discovered-item-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+  }
+
+  .discovered-item-icon {
+    font-size: 1.8rem;
+  }
+
+  .discovered-item-sub {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--color-muted);
+  }
+
+  .empty-list-state {
+    text-align: center;
+    padding: var(--spacing-xl);
+    font-size: 0.95rem;
+    color: var(--color-muted);
+  }
+
+  /* ---------------------------------------------------------
+     SELECTED DEVICE SHARING OVERLAY
+     --------------------------------------------------------- */
+  .selected-sharing-overlay {
+    position: fixed;
+    inset: 0;
+    top: 60px;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: fadeInOverlay 0.2s ease-out;
+  }
+
+  @keyframes fadeInOverlay {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .selected-sharing-card {
+    width: 100%;
+    max-width: 500px;
+    max-height: calc(100vh - 90px);
+    overflow-y: auto;
+    background: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .sharing-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .back-to-radar-btn {
+    font-size: 0.825rem;
+    font-weight: 600;
+  }
+
+  .connection-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-muted);
+    background: var(--color-surface-soft);
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--color-hairline);
+  }
+
+  .selected-target-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: var(--spacing-md);
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+  }
+
+  .selected-target-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  }
+
+  .selected-target-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .selected-target-prefix {
+    font-size: 0.725rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-muted);
+    font-weight: 600;
+  }
+
+  .selected-target-name {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin: 1px 0;
+  }
+
+  .selected-target-sub {
+    font-size: 0.8rem;
+    color: var(--color-muted);
+  }
+
+  .sharing-mode-selector {
+    display: flex;
+    background: var(--color-surface-soft);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 3px;
+    gap: 4px;
+  }
+
+  .mode-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .mode-tab.active {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  /* File Drop Area */
+  .drop-zone {
+    border: 2px dashed var(--color-hairline);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl) var(--spacing-lg);
+    text-align: center;
+    cursor: pointer;
+    background: var(--color-surface-soft);
+    transition: all 0.2s ease;
     margin-bottom: var(--spacing-md);
+  }
+
+  .drop-zone:hover:not(.disabled),
+  .drop-zone:focus-visible:not(.disabled),
+  .drop-zone.drag-active {
+    border-color: #2563eb;
+    background: var(--color-surface-card);
+    outline: none;
+  }
+
+  .drop-zone.disabled {
+    opacity: 0.65;
+    cursor: pointer;
+  }
+
+  .drop-icon {
+    font-size: 2.2rem;
+    margin-bottom: 6px;
+  }
+
+  .drop-zone h4 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .drop-zone p {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    margin-bottom: 6px;
+  }
+
+  .drop-zone-hint {
+    font-size: 0.75rem;
+    color: var(--color-muted-soft);
+  }
+
+  /* Transfers List & Minimal Received File Cards */
+  .transfers-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
   }
 
   .transfers-list {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: 10px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding-right: 2px;
   }
 
   .transfer-item {
-    padding: var(--spacing-md) var(--spacing-lg);
-  }
-
-  .transfer-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--spacing-sm);
-  }
-
-  .transfer-title-group {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    overflow: hidden;
-  }
-
-  .transfer-direction-icon {
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: var(--color-primary);
-  }
-
-  .transfer-name-size {
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-hairline);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    gap: 8px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .transfer-file-name {
+  .transfer-item:hover {
+    border-color: var(--color-hairline-strong, rgba(0, 0, 0, 0.15));
+  }
+
+  /* Completed received file card, completed sent card, and failed card */
+  .transfer-received-completed,
+  .transfer-sent-completed,
+  .transfer-failed {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .received-card-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .received-icon-wrapper {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-sm);
+    background: rgba(37, 99, 235, 0.08);
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .received-icon-wrapper.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-error);
+    font-size: 1.1rem;
+  }
+
+  .received-details {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .received-file-name {
+    font-size: 0.925rem;
+    font-weight: 600;
     color: var(--color-ink);
-    font-size: 0.95rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 450px;
+    line-height: 1.25;
   }
 
-  .transfer-meta-text {
-    font-size: 0.8rem;
+  .received-file-sub {
+    font-size: 0.775rem;
     color: var(--color-muted);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .progress-bar-container {
+  .received-file-sub.text-error {
+    color: var(--color-error);
+  }
+
+  .received-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  /* Primary Download Button */
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #2563eb;
+    color: #ffffff !important;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
+    text-decoration: none !important;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.28);
+    flex-shrink: 0;
+    outline: none;
+  }
+
+  .btn-download:hover {
+    background-color: #1d4ed8;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .btn-download:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+
+  .btn-download:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(37, 99, 235, 0.2);
+  }
+
+  .btn-download svg {
+    flex-shrink: 0;
+  }
+
+  /* In-progress transfer styling */
+  .transfer-in-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .transfer-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .transfer-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .transfer-status-text {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .btn-cancel-transfer {
+    background: transparent;
+    border: none;
+    color: var(--color-muted);
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: var(--radius-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .btn-cancel-transfer:hover {
+    color: var(--color-error);
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  .progress-bar {
     width: 100%;
-    height: 8px;
-    background-color: var(--color-canvas);
+    height: 5px;
+    background-color: var(--color-hairline);
     border-radius: var(--radius-pill);
     overflow: hidden;
-    margin: var(--spacing-xs) 0;
   }
 
-  .progress-bar-fill {
+  .progress-fill {
     height: 100%;
-    background-color: var(--color-primary);
-    transition: width 0.15s ease-out;
+    background-color: #2563eb;
+    border-radius: var(--radius-pill);
+    transition: width 0.15s ease;
   }
 
-  .transfer-footer {
+  /* Text Composer */
+  .text-composer-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .text-composer-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 0.8rem;
-    color: var(--color-muted);
-    margin-top: 4px;
   }
 
-  /* Text Sharing Section */
-  .text-sharing-card {
-    padding: var(--spacing-lg);
-    margin-bottom: var(--spacing-xl);
+  .composer-label {
+    font-size: 0.85rem;
+    font-weight: 600;
   }
 
-  .text-input-header {
+  .composer-textarea {
+    resize: vertical;
+    min-height: 85px;
+  }
+
+  .text-composer-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--spacing-xs);
   }
 
-  .text-input-label {
-    font-weight: 500;
-    font-size: 0.9rem;
-    color: var(--color-ink);
-  }
-
-  .text-input-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  .messages-container {
     margin-top: var(--spacing-sm);
-  }
-
-  .char-count {
-    font-size: 0.8rem;
-    color: var(--color-muted);
   }
 
   .messages-list {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
   }
 
   .message-item {
-    padding: var(--spacing-md);
+    padding: 10px 14px;
+    font-size: 0.875rem;
+    border-radius: var(--radius-md, 8px);
+    transition: background-color 0.15s ease;
+  }
+
+  .message-item.message-sent {
+    background: var(--color-surface, rgba(0, 0, 0, 0.03));
+    border-left: 3px solid var(--color-accent, #3b82f6);
+  }
+
+  .message-item.message-received {
+    background: var(--color-surface, rgba(0, 0, 0, 0.03));
+    border-left: 3px solid #10b981;
+  }
+
+  .message-body {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    font-family: inherit;
+    line-height: 1.5;
+    color: var(--color-fg);
   }
 
   .message-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 6px;
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    margin-bottom: 4px;
   }
 
-  .message-sender {
+  .message-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+  }
+
+  /* ---------------------------------------------------------
+     Connected Peer Banner (Floating)
+     --------------------------------------------------------- */
+  .peer-banner {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 640px;
+    z-index: 40;
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.85rem;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-radius: var(--radius-lg);
+  }
+
+  .peer-info-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .peer-icon {
+    font-size: 1.6rem;
+  }
+
+  .peer-title {
+    font-size: 0.95rem;
     color: var(--color-ink);
   }
 
-  .message-time {
-    color: var(--color-muted);
+  .peer-subtitle {
     font-size: 0.775rem;
-  }
-
-  .message-body {
-    font-size: 0.95rem;
-    color: var(--color-body);
-    white-space: pre-wrap;
-    word-break: break-word;
-    font-family: var(--font-mono);
-    background-color: var(--color-canvas);
-    padding: 8px 12px;
-    border-radius: var(--radius-sm);
-  }
-
-  /* Empty State */
-  .empty-state {
-    text-align: center;
-    padding: var(--spacing-xl);
     color: var(--color-muted);
-    font-size: 0.9rem;
-    border: 1px dashed var(--color-hairline);
-    border-radius: var(--radius-md);
   }
 
-  /* Waiting Prompt Card */
-  .waiting-prompt {
-    text-align: center;
-    padding: var(--spacing-xl);
-    border-color: rgba(204, 120, 92, 0.3);
-    background-color: #faf5ee;
+  .peer-status-tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
-  .waiting-icon {
-    font-size: 2.25rem;
-    margin-bottom: var(--spacing-xs);
-  }
-
-  .waiting-prompt h3 {
-    margin-bottom: 6px;
-  }
-
-  .waiting-prompt p {
-    color: var(--color-muted);
-    max-width: 500px;
-    margin: 0 auto;
-    font-size: 0.95rem;
-  }
-
-  /* Modal Dialogs */
+  /* ---------------------------------------------------------
+     Modal Dialogs
+     --------------------------------------------------------- */
   .modal-dialog {
     border: none;
     background: transparent;
@@ -1315,17 +2741,20 @@ const appStructuredData = getSoftwareApplicationSchema();
     max-width: 440px;
     width: 90%;
     margin: auto;
+    z-index: 100;
   }
 
   .modal-dialog::backdrop {
-    background-color: rgba(20, 20, 19, 0.45);
-    backdrop-filter: blur(2px);
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
   }
 
   .modal-content {
     background-color: var(--color-canvas);
     border: 1px solid var(--color-hairline);
     padding: var(--spacing-xl);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
   }
 
   .modal-header {
@@ -1357,7 +2786,7 @@ const appStructuredData = getSoftwareApplicationSchema();
 
   .qr-wrapper canvas {
     border-radius: var(--radius-md);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
   .share-link-group {
@@ -1366,11 +2795,13 @@ const appStructuredData = getSoftwareApplicationSchema();
     margin-top: var(--spacing-md);
   }
 
-  /* Toast Notification */
+  /* ---------------------------------------------------------
+     Toast Notifications
+     --------------------------------------------------------- */
   .toast-container {
     position: fixed;
     bottom: 24px;
-    right: 24px;
+    left: 24px;
     z-index: 999;
     display: flex;
     flex-direction: column;
@@ -1382,9 +2813,10 @@ const appStructuredData = getSoftwareApplicationSchema();
     background-color: var(--color-surface-dark);
     color: var(--color-on-dark);
     padding: 10px 18px;
-    border-radius: var(--radius-md);
-    font-size: 0.875rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: var(--radius-pill);
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24);
     animation: toast-in 0.2s ease-out;
   }
 
@@ -1404,26 +2836,55 @@ const appStructuredData = getSoftwareApplicationSchema();
     }
   }
 
-  /* Responsive Adjustments */
+  /* ---------------------------------------------------------
+     Responsive Mobile Adjustments (320px - 768px)
+     --------------------------------------------------------- */
   @media (max-width: 640px) {
-    .device-bar {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: var(--spacing-md);
+    .radar-transmitter {
+      margin-bottom: 28px;
     }
 
-    .session-actions {
-      width: 100%;
-      justify-content: space-between;
+    .radar-field-prompt {
+      top: 15%;
+      max-width: 90%;
     }
 
-    .session-entry-group {
-      width: 100%;
-      justify-content: space-between;
+    .selected-sharing-card {
+      max-height: calc(100vh - 75px);
+      padding: var(--spacing-md);
     }
 
     .transfer-file-name {
-      max-width: 200px;
+      max-width: 160px;
+    }
+
+    .received-file-name {
+      max-width: 140px;
+    }
+
+    .btn-download {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .radar-device-node {
+      max-width: 110px;
+    }
+    .radar-node-bubble {
+      width: 52px;
+      height: 52px;
+    }
+    .radar-node-icon {
+      font-size: 1.4rem;
+    }
+    .radar-node-label {
+      font-size: 0.8rem;
+      max-width: 95px;
+    }
+    .received-file-name {
+      max-width: 105px;
     }
   }
 </style>

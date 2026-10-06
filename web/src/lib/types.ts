@@ -10,18 +10,49 @@ export interface PeerInfo {
   deviceType: string;
 }
 
+export interface DiscoveredDevice {
+  deviceId: string;
+  deviceName: string;
+  deviceType: 'desktop' | 'laptop' | 'phone' | 'tablet';
+  status: string; // 'available' | 'busy'
+}
+
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'failed';
 export type ConnectionType = 'direct' | 'relayed' | 'unknown';
 
 export interface SignalingMessage {
-  type: 'create-session' | 'join-session' | 'leave-session' | 'session-created' | 'session-joined' | 'peer-joined' | 'peer-left' | 'offer' | 'answer' | 'ice-candidate' | 'error';
+  type:
+    | 'create-session'
+    | 'join-session'
+    | 'leave-session'
+    | 'session-created'
+    | 'session-joined'
+    | 'peer-joined'
+    | 'peer-left'
+    | 'offer'
+    | 'answer'
+    | 'ice-candidate'
+    | 'register-presence'
+    | 'update-presence'
+    | 'presence-list'
+    | 'device-joined'
+    | 'device-left'
+    | 'device-updated'
+    | 'request-pairing'
+    | 'pairing-initiated'
+    | 'pairing-invitation'
+    | 'error';
   sessionId?: string;
   peerId?: string;
   targetId?: string;
+  deviceId?: string;
   deviceName?: string;
   deviceType?: string;
+  targetDeviceId?: string;
   data?: any;
   peers?: PeerInfo[];
+  devices?: DiscoveredDevice[];
+  device?: DiscoveredDevice;
   iceServers?: IceServerConfig[];
   error?: string;
 }

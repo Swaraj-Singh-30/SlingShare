@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Swaraj-Singh-30/SlingShare/internal/peer"
@@ -22,13 +23,28 @@ const (
 	pingPeriod     = (pongWait * 9) / 10
 )
 
+type DiscoveredDevice struct {
+	DeviceID   string
+	DeviceName string
+	DeviceType string
+	Status     string
+	Conn       *websocket.Conn
+	WriteLock  *sync.Mutex
+	LastSeen   time.Time
+}
+
 type Server struct {
 	upgrader websocket.Upgrader
 	manager  *session.Manager
+
+	mu        sync.RWMutex
+	devices   map[string]*DiscoveredDevice     // keyed by DeviceID
+	connMap   map[*websocket.Conn]string       // maps Conn to DeviceID
+	connLocks map[*websocket.Conn]*sync.Mutex // ensures thread-safe writes per connection
 }
 
 func NewServer() *Server {
-	return &Server{
+	s := &Server{
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  4096,
 			WriteBufferSize: 4096,
@@ -36,12 +52,42 @@ func NewServer() *Server {
 				return true // Allows pairing from different local hostnames / IPs
 			},
 		},
-		manager: session.NewManager(session.DefaultMaxPeersPerSession),
+		manager:   session.NewManager(session.DefaultMaxPeersPerSession),
+		devices:   make(map[string]*DiscoveredDevice),
+		connMap:   make(map[*websocket.Conn]string),
+		connLocks: make(map[*websocket.Conn]*sync.Mutex),
 	}
+
+	go s.discoveryCleanupLoop()
+	return s
 }
 
 func (s *Server) GetManager() *session.Manager {
 	return s.manager
+}
+
+func (s *Server) getConnLock(conn *websocket.Conn) *sync.Mutex {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	lock, exists := s.connLocks[conn]
+	if !exists {
+		lock = &sync.Mutex{}
+		s.connLocks[conn] = lock
+	}
+	return lock
+}
+
+func (s *Server) writeJSONSafe(conn *websocket.Conn, msg interface{}) error {
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	lock := s.getConnLock(conn)
+	lock.Lock()
+	defer lock.Unlock()
+
+	_ = conn.SetWriteDeadline(time.Now().Add(writeWait))
+	return conn.WriteMessage(websocket.TextMessage, data)
 }
 
 func (s *Server) GetIceServers() []IceServer {
@@ -101,6 +147,7 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	var currentSessionID string
 	var currentPeer *peer.Peer
+	var currentDeviceID string
 
 	// Ping ticker for keepalive
 	ticker := time.NewTicker(pingPeriod)
@@ -113,15 +160,13 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		for {
 			select {
 			case <-ticker.C:
-				if currentPeer != nil {
-					if err := currentPeer.SendMessage(websocket.PingMessage, []byte{}); err != nil {
-						return
-					}
-				} else {
-					_ = conn.SetWriteDeadline(time.Now().Add(writeWait))
-					if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-						return
-					}
+				lock := s.getConnLock(conn)
+				lock.Lock()
+				_ = conn.SetWriteDeadline(time.Now().Add(writeWait))
+				err := conn.WriteMessage(websocket.PingMessage, []byte{})
+				lock.Unlock()
+				if err != nil {
+					return
 				}
 			case <-done:
 				return
@@ -134,6 +179,13 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		if currentSessionID != "" && currentPeer != nil {
 			s.handlePeerDisconnect(currentSessionID, currentPeer.ID)
 		}
+		if currentDeviceID != "" {
+			s.removeDiscoveredDevice(conn, currentDeviceID)
+		}
+		s.mu.Lock()
+		delete(s.connLocks, conn)
+		delete(s.connMap, conn)
+		s.mu.Unlock()
 		_ = conn.Close()
 	}()
 
@@ -154,19 +206,74 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		switch msg.Type {
 
+		// ================= Discovery & Presence =================
+		case "register-presence":
+			devID := strings.TrimSpace(msg.DeviceID)
+			if devID == "" || len(devID) > 64 {
+				continue
+			}
+
+			devName := sanitizeDeviceName(msg.DeviceName)
+			devType := sanitizeDeviceType(msg.DeviceType)
+
+			currentDeviceID = devID
+			s.registerDiscoveredDevice(conn, devID, devName, devType)
+
+		case "update-presence":
+			if currentDeviceID == "" {
+				continue
+			}
+			devName := sanitizeDeviceName(msg.DeviceName)
+			devType := sanitizeDeviceType(msg.DeviceType)
+			s.updateDiscoveredDevice(currentDeviceID, devName, devType)
+
+		case "request-pairing":
+			// A discovered peer was clicked on the Radar
+			targetDevID := strings.TrimSpace(msg.TargetDeviceID)
+			log.Printf("[signaling] Received request-pairing from %s to %s", currentDeviceID, targetDevID)
+			if targetDevID == "" || currentDeviceID == "" {
+				continue
+			}
+
+			if currentSessionID != "" && currentPeer != nil {
+				s.handlePeerDisconnect(currentSessionID, currentPeer.ID)
+				currentSessionID = ""
+				currentPeer = nil
+			}
+
+			// Generate a session room code for this pair
+			roomCode := s.generateUniqueRoomCode()
+			s.manager.Create(roomCode)
+			log.Printf("[signaling] Created session %s for pairing %s -> %s", roomCode, currentDeviceID, targetDevID)
+
+			// Notify target device with invitation
+			s.forwardPairingInvitation(targetDevID, currentDeviceID, msg.DeviceName, msg.DeviceType, roomCode)
+
+			// Reply to sender with room code
+			_ = s.writeJSONSafe(conn, Message{
+				Type:           "pairing-initiated",
+				SessionID:      roomCode,
+				TargetDeviceID: targetDevID,
+			})
+
+		// ================= WebRTC Room Sessions =================
 		case "create-session":
 			if currentSessionID != "" {
-				continue
+				if currentPeer != nil {
+					s.handlePeerDisconnect(currentSessionID, currentPeer.ID)
+				}
+				currentSessionID = ""
+				currentPeer = nil
 			}
 
 			roomCode := s.generateUniqueRoomCode()
 			s.manager.Create(roomCode)
 
 			peerID := s.generatePeerID()
-			currentPeer = peer.New(peerID, conn, msg.DeviceName, msg.DeviceType)
+			currentPeer = peer.New(peerID, conn, sanitizeDeviceName(msg.DeviceName), sanitizeDeviceType(msg.DeviceType))
 
 			if err := s.manager.AddPeer(roomCode, currentPeer); err != nil {
-				_ = currentPeer.SendJSON(Message{
+				_ = s.writeJSONSafe(conn, Message{
 					Type:  "error",
 					Error: "Failed to initialize session",
 				})
@@ -174,8 +281,8 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			}
 
 			currentSessionID = roomCode
-
 			iceServers := s.GetIceServers()
+
 			_ = currentPeer.SendJSON(Message{
 				Type:       "session-created",
 				SessionID:  roomCode,
@@ -188,24 +295,33 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			log.Printf("[signaling] Session created: %s by peer %s (%s)", roomCode, peerID, currentPeer.DeviceName)
 
 		case "join-session":
-			if currentSessionID != "" {
+			code := strings.ToUpper(strings.TrimSpace(msg.SessionID))
+			if code == "" {
+				_ = s.writeJSONSafe(conn, Message{Type: "error", Error: "Session code is required"})
 				continue
 			}
 
-			code := strings.ToUpper(strings.TrimSpace(msg.SessionID))
-			if code == "" {
-				s.sendErrorDirect(conn, "Session code is required")
-				continue
+			if currentSessionID != "" {
+				if currentSessionID == code {
+					// Already in this session
+					continue
+				}
+				// Cleanly leave previous session before joining the new one
+				if currentPeer != nil {
+					s.handlePeerDisconnect(currentSessionID, currentPeer.ID)
+				}
+				currentSessionID = ""
+				currentPeer = nil
 			}
 
 			sess, exists := s.manager.Get(code)
 			if !exists {
-				s.sendErrorDirect(conn, "Session not found or has expired")
+				_ = s.writeJSONSafe(conn, Message{Type: "error", Error: "Session not found or has expired"})
 				continue
 			}
 
 			peerID := s.generatePeerID()
-			currentPeer = peer.New(peerID, conn, msg.DeviceName, msg.DeviceType)
+			currentPeer = peer.New(peerID, conn, sanitizeDeviceName(msg.DeviceName), sanitizeDeviceType(msg.DeviceType))
 
 			// Get existing peers before adding the new one
 			existingPeers := sess.GetPeers()
@@ -219,7 +335,7 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if err := s.manager.AddPeer(code, currentPeer); err != nil {
-				s.sendErrorDirect(conn, err.Error())
+				_ = s.writeJSONSafe(conn, Message{Type: "error", Error: err.Error()})
 				currentPeer = nil
 				continue
 			}
@@ -282,6 +398,160 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Discovery Helpers
+func (s *Server) registerDiscoveredDevice(conn *websocket.Conn, devID, devName, devType string) {
+	s.mu.Lock()
+	lock, hasLock := s.connLocks[conn]
+	if !hasLock {
+		lock = &sync.Mutex{}
+		s.connLocks[conn] = lock
+	}
+
+	device := &DiscoveredDevice{
+		DeviceID:   devID,
+		DeviceName: devName,
+		DeviceType: devType,
+		Status:     "available",
+		Conn:       conn,
+		WriteLock:  lock,
+		LastSeen:   time.Now(),
+	}
+
+	s.devices[devID] = device
+	s.connMap[conn] = devID
+
+	// Prepare list of other active devices
+	var otherDevices []DiscoveredInfo
+	for id, d := range s.devices {
+		if id != devID {
+			otherDevices = append(otherDevices, DiscoveredInfo{
+				DeviceID:   d.DeviceID,
+				DeviceName: d.DeviceName,
+				DeviceType: d.DeviceType,
+				Status:     d.Status,
+			})
+		}
+	}
+	s.mu.Unlock()
+
+	// Send presence-list to caller
+	_ = s.writeJSONSafe(conn, Message{
+		Type:    "presence-list",
+		Devices: otherDevices,
+	})
+
+	// Broadcast device-joined to all other devices
+	s.broadcastToDiscoverable(devID, Message{
+		Type: "device-joined",
+		Device: &DiscoveredInfo{
+			DeviceID:   devID,
+			DeviceName: devName,
+			DeviceType: devType,
+			Status:     "available",
+		},
+	})
+	log.Printf("[discovery] Device registered: %s (%s, %s)", devName, devType, devID)
+}
+
+func (s *Server) updateDiscoveredDevice(devID, devName, devType string) {
+	s.mu.Lock()
+	device, exists := s.devices[devID]
+	if exists {
+		device.DeviceName = devName
+		device.DeviceType = devType
+		device.LastSeen = time.Now()
+	}
+	s.mu.Unlock()
+
+	if exists {
+		s.broadcastToDiscoverable(devID, Message{
+			Type: "device-updated",
+			Device: &DiscoveredInfo{
+				DeviceID:   devID,
+				DeviceName: devName,
+				DeviceType: devType,
+				Status:     "available",
+			},
+		})
+	}
+}
+
+func (s *Server) removeDiscoveredDevice(conn *websocket.Conn, devID string) {
+	s.mu.Lock()
+	delete(s.devices, devID)
+	delete(s.connMap, conn)
+	s.mu.Unlock()
+
+	s.broadcastToDiscoverable(devID, Message{
+		Type:     "device-left",
+		DeviceID: devID,
+	})
+	log.Printf("[discovery] Device removed: %s", devID)
+}
+
+func (s *Server) forwardPairingInvitation(targetDevID, fromDevID, fromName, fromType, roomCode string) {
+	s.mu.RLock()
+	targetDevice, exists := s.devices[targetDevID]
+	var targetConn *websocket.Conn
+	if exists {
+		targetConn = targetDevice.Conn
+	}
+	s.mu.RUnlock()
+
+	if targetConn != nil {
+		_ = s.writeJSONSafe(targetConn, Message{
+			Type:           "pairing-invitation",
+			SessionID:      roomCode,
+			TargetDeviceID: fromDevID,
+			DeviceName:     fromName,
+			DeviceType:     fromType,
+		})
+	}
+}
+
+func (s *Server) broadcastToDiscoverable(excludeDevID string, msg Message) {
+	var targetConns []*websocket.Conn
+	s.mu.RLock()
+	for id, d := range s.devices {
+		if id != excludeDevID && d.Conn != nil {
+			targetConns = append(targetConns, d.Conn)
+		}
+	}
+	s.mu.RUnlock()
+
+	for _, conn := range targetConns {
+		_ = s.writeJSONSafe(conn, msg)
+	}
+}
+
+func (s *Server) discoveryCleanupLoop() {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		now := time.Now()
+		var expiredIDs []string
+
+		s.mu.Lock()
+		for id, d := range s.devices {
+			if now.Sub(d.LastSeen) > 5*time.Minute {
+				expiredIDs = append(expiredIDs, id)
+			}
+		}
+		for _, id := range expiredIDs {
+			delete(s.devices, id)
+		}
+		s.mu.Unlock()
+
+		for _, id := range expiredIDs {
+			s.broadcastToDiscoverable(id, Message{
+				Type:     "device-left",
+				DeviceID: id,
+			})
+		}
+	}
+}
+
 func (s *Server) handlePeerDisconnect(sessionID, peerID string) {
 	_, remaining := s.manager.RemovePeer(sessionID, peerID)
 	log.Printf("[signaling] Peer %s left session %s (%d peers remaining)", peerID, sessionID, remaining)
@@ -299,13 +569,32 @@ func (s *Server) handlePeerDisconnect(sessionID, peerID string) {
 	}
 }
 
-func (s *Server) sendErrorDirect(conn *websocket.Conn, message string) {
-	data, _ := json.Marshal(Message{
-		Type:  "error",
-		Error: message,
-	})
-	_ = conn.SetWriteDeadline(time.Now().Add(writeWait))
-	_ = conn.WriteMessage(websocket.TextMessage, data)
+func sanitizeDeviceName(raw string) string {
+	clean := strings.TrimSpace(raw)
+	// Strip control characters
+	clean = strings.Map(func(r rune) rune {
+		if r < 32 || r == 127 {
+			return -1
+		}
+		return r
+	}, clean)
+
+	if len(clean) == 0 {
+		return "Device"
+	}
+	if len(clean) > 40 {
+		return clean[:40]
+	}
+	return clean
+}
+
+func sanitizeDeviceType(raw string) string {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "phone", "tablet", "laptop", "desktop":
+		return strings.ToLower(strings.TrimSpace(raw))
+	default:
+		return "desktop"
+	}
 }
 
 func (s *Server) generateUniqueRoomCode() string {
