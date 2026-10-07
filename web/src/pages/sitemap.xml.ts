@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { siteConfig } from '../config/site';
+import { siteConfig, getCanonicalUrl } from '../config/site';
 
 const publicPages = [
   '',
@@ -25,10 +25,11 @@ export const GET: APIRoute = async () => {
 
   const xmlUrls = publicPages
     .map((page) => {
-      const priority = page === '' ? '1.0' : page === '/app' ? '0.9' : '0.8';
-      const changeFreq = page === '' || page === '/app' ? 'daily' : 'monthly';
+      const priority = page === '' ? '1.0' : '0.8';
+      const changeFreq = page === '' ? 'daily' : 'monthly';
+      const loc = getCanonicalUrl(page || '/');
       return `  <url>
-    <loc>${siteConfig.siteUrl}${page}</loc>
+    <loc>${loc}</loc>
     <lastmod>${currentDate}</lastmod>
     <changefreq>${changeFreq}</changefreq>
     <priority>${priority}</priority>

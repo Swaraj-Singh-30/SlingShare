@@ -10,6 +10,7 @@
   NODE_VERSION = "22"
   PUBLIC_WS_URL = "wss://slingshare.onrender.com/ws"
   PUBLIC_GA_ID = "G-QHRJZ18LVE"
+  SITE_URL = "https://slingshare.netlify.app"
 
 # Production HTTP Security Headers
 [[headers]]

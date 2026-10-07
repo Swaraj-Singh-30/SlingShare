@@ -8,11 +8,14 @@ export interface SiteConfig {
   twitterHandle: string;
 }
 
+const rawSiteUrl =
+  (typeof process !== 'undefined' && process.env?.SITE_URL) ||
+  import.meta.env?.SITE_URL ||
+  'https://slingshare.netlify.app';
+
 export const siteConfig: SiteConfig = {
   siteName: 'SlingShare',
-  siteUrl: typeof process !== 'undefined' && process.env?.SITE_URL
-    ? process.env.SITE_URL
-    : 'https://slingshare.io',
+  siteUrl: rawSiteUrl.replace(/\/+$/, ''),
   tagline: 'Fast, Private Peer-to-Peer File & Text Sharing',
   description:
     'Transfer files, text, and clipboard snippets directly between your phone, laptop, and PC. Zero accounts, no cloud uploads, completely direct and encrypted.',

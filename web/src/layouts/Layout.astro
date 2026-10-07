@@ -16,13 +16,17 @@ interface Props {
 const {
   title = `${siteConfig.siteName} — ${siteConfig.tagline}`,
   description = siteConfig.description,
-  canonical = getCanonicalUrl(Astro.url.pathname),
+  canonical: propCanonical,
   ogType = 'website',
   ogImage = siteConfig.defaultSocialImage,
   noindex = false,
   structuredData,
   isApp = false,
 } = Astro.props;
+
+const canonical = propCanonical
+  ? (propCanonical.startsWith('http') ? propCanonical : getCanonicalUrl(propCanonical))
+  : getCanonicalUrl(Astro.url.pathname);
 
 const fullImageUrl = ogImage.startsWith('http') ? ogImage : `${siteConfig.siteUrl}${ogImage}`;
 
