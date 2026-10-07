@@ -26,7 +26,7 @@ const {
 
 const fullImageUrl = ogImage.startsWith('http') ? ogImage : `${siteConfig.siteUrl}${ogImage}`;
 
-const gaMeasurementId = import.meta.env.PUBLIC_GA_ID || 'G-P55FK5FYW8';
+const gaMeasurementId = import.meta.env.PUBLIC_GA_ID || 'G-QHRJZ18LVE';
 const isProd = import.meta.env.PROD;
 ---
 
@@ -98,7 +98,7 @@ const isProd = import.meta.env.PROD;
       />
     )}
 
-    <!-- Google tag (gtag.js) - Google Analytics 4 (Production only) -->
+    <!-- Google tag (gtag.js) -->
     {isProd && gaMeasurementId && (
       <>
         <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}></script>
